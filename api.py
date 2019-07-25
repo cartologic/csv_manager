@@ -1,9 +1,11 @@
-from tastypie.resources import ModelResource
-from tastypie.constants import ALL, ALL_WITH_RELATIONS
-from tastypie.fields import ListField
-from django.conf import settings
 import csv
 import os
+
+from django.conf import settings
+from tastypie.constants import ALL, ALL_WITH_RELATIONS
+from tastypie.fields import ListField
+from tastypie.resources import ModelResource
+
 from .models import CSVUpload
 
 
@@ -15,8 +17,10 @@ def get_field_names(path):
         field_names.append(i)
     return field_names
 
+
 class CSVUploadResource(ModelResource):
     fields_names = ListField()
+
     class Meta:
         queryset = CSVUpload.objects.all()
         resource_name = 'csv_upload'
@@ -29,7 +33,7 @@ class CSVUploadResource(ModelResource):
             "updated_at": ALL,
             "user": ALL_WITH_RELATIONS
         }
-        excludes = ['csv_file',]
+        excludes = ['csv_file', ]
 
     # modify to return only user's list
     def get_object_list(self, request):

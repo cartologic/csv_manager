@@ -11,14 +11,13 @@ import lxml
 import requests
 from django.conf import settings
 from django.utils.translation import ugettext as _
-from geoserver.catalog import FailedRequestError
-
 from geonode.geoserver.helpers import (cascading_delete, get_store, gs_catalog,
                                        ogc_server_settings,
                                        set_attributes_from_geoserver)
 from geonode.layers.models import Layer
 from geonode.people.models import Profile
 from geonode.security.views import _perms_info_json
+from geoserver.catalog import FailedRequestError
 
 from .helpers import urljoin
 from .utils import SLUGIFIER, create_datastore, requests_retry_session
@@ -99,7 +98,7 @@ class GeoserverPublisher(object):
         s = requests_retry_session(session=s)
         req = s.put(
             url,
-            data=file.read(),)
+            data=file.read(), )
         message = "URL:{} STATUS:".format(url, req.status_code)
         logger.error(message)
         if req.status_code == 201:
@@ -204,12 +203,12 @@ class GeonodePublisher(object):
                     "store": the_store.name,
                     "storeType": the_store.resource_type,
                     "alternate":
-                    "%s:%s" % (workspace.name.encode('utf-8'),
-                               resource.name.encode('utf-8')),
+                        "%s:%s" % (workspace.name.encode('utf-8'),
+                                   resource.name.encode('utf-8')),
                     "title": (resource.title or 'No title provided'),
                     "abstract":
-                    (resource.abstract or
-                     unicode(_('No abstract provided')).encode('utf-8')),
+                        (resource.abstract or
+                         unicode(_('No abstract provided')).encode('utf-8')),
                     "owner": self.owner,
                     "uuid": str(uuid.uuid4()),
                     "bbox_x0": Decimal(resource.native_bbox[0]),
