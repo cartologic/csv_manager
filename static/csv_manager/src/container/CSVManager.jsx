@@ -16,6 +16,8 @@ export default class CSVManager extends Component {
             listLoading: false,
             uploadLoading: false,
         }
+        // globalURLS are predefined in index.html otherwise use the following defaults
+        this.urls = globalURLS
         this.onDrop = this.onDrop.bind(this)
         this.fetchListOfCsvFiles = this.fetchListOfCsvFiles.bind(this)
         this.handlePublishDialogClose = this.handlePublishDialogClose.bind(this)
@@ -34,7 +36,7 @@ export default class CSVManager extends Component {
                 formData.append('csrfmiddlewaretoken', getCRSFToken())
                 formData.append('id', item.id)
                 formData.append('_method', 'DELETE')
-                fetch('http://localhost/apps/csv_manager/upload/', {
+                fetch(this.urls.uploadCSV, {
                     method: 'POST',
                     body: formData,
                     credentials: 'same-origin',
@@ -56,7 +58,7 @@ export default class CSVManager extends Component {
         let re = /^[a-z0-9_]{1,63}$/
         this.setState({
             loading: true,
-        }, ()=>{
+        }, () => {
 
             if (item.table_name && re.test(item.table_name)) {
                 let form = new FormData();
@@ -66,7 +68,7 @@ export default class CSVManager extends Component {
                 form.append('srs', item.srs)
                 form.append('table_name', item.table_name)
                 form.append('csrfmiddlewaretoken', getCRSFToken())
-                fetch('http://localhost/apps/csv_manager/publish/', {
+                fetch(this.urls.publishCSV, {
                     method: 'POST',
                     body: form,
                     credentials: 'same-origin',
@@ -98,7 +100,7 @@ export default class CSVManager extends Component {
                                 })
                         }
                     })
-    
+
             } else {
                 this.setState({
                     publishDialogData: {
@@ -144,21 +146,21 @@ export default class CSVManager extends Component {
         this.setState({
             listLoading: true,
         })
-        fetch('http://localhost/apps/csv_manager/api/v1/csv_upload/', {
+        fetch(this.urls.csvFilesApi, {
             credentials: 'same-origin',
         })
             .then(response => response.json())
             .then(data => this.setState({ listLoading: false, csvItems: data.objects }))
     }
     onDrop(accepted, rejected) {
-        for (let i=0; i < accepted.length; i++) {
+        for (let i = 0; i < accepted.length; i++) {
             this.setState({
                 uploadLoading: true,
-            }, ()=>{
+            }, () => {
                 let formData = new FormData();
                 formData.append('csv_file', accepted[i])
                 formData.append('csrfmiddlewaretoken', getCRSFToken())
-                fetch('http://localhost/apps/csv_manager/upload/', {
+                fetch(this.urls.uploadCSV, {
                     method: 'POST',
                     body: formData,
                     credentials: 'same-origin',
@@ -166,7 +168,7 @@ export default class CSVManager extends Component {
                     .then(response => response.json())
                     .then(response => {
                         if (response.status) {
-                            this.setState({uploadLoading: false}, ()=>{this.fetchListOfCsvFiles()})
+                            this.setState({ uploadLoading: false }, () => { this.fetchListOfCsvFiles() })
                         }
                     })
             })
@@ -190,6 +192,8 @@ export default class CSVManager extends Component {
             csvItems: this.state.csvItems,
             publishDialogOpen: this.state.publishDialogOpen,
             publishDialogData: this.state.publishDialogData,
+
+            urls: this.urls,
         }
         return (
             <MainPage {...props} />

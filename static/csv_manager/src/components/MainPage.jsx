@@ -4,7 +4,7 @@ import ContentWrapper from '../components/ContentWrapper'
 
 export default (props) => (
     <div className='page-wrapper'>
-        <AppBar />
+        <AppBar {...props} />
         <ContentWrapper {...props} />
     </div>
 )

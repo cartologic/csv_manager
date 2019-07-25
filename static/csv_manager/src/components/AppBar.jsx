@@ -6,6 +6,7 @@ import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
+import Link from '@material-ui/core/Link';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -23,9 +24,9 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-export default function ButtonAppBar() {
+export default function ButtonAppBar(props) {
   const classes = useStyles();
-
+  const {urls} = props
   return (
     <div className={classes.root}>
       <AppBar position="static" className={classes.appBar}>
@@ -36,9 +37,15 @@ export default function ButtonAppBar() {
           <Typography variant="h6" className={classes.title}>
             CSV Manager
           </Typography>
-          <Button color="inherit">Upload Layer</Button>
-          <Button color="inherit">Data Manager</Button>
-          <Button color="inherit">Home</Button>
+          <Link underline={'none'} color="inherit" href={urls.layerUpload}>
+            <Button color="inherit">Upload Layer</Button>
+          </Link>
+          <Link underline={'none'} color="inherit" href={urls.dataManager}>
+            <Button color="inherit">Data Manager</Button>
+          </Link>
+          <Link underline={'none'} color="inherit" href={urls.baseURL}>
+            <Button color="inherit">Home</Button>
+          </Link>
         </Toolbar>
       </AppBar>
     </div>
