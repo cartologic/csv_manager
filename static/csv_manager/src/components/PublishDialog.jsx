@@ -7,8 +7,18 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import CloseIcon from '@material-ui/icons/Close'
+import { makeStyles } from '@material-ui/core/styles';
 import SelectForm from './SelectForm'
 
+const useStyles = makeStyles(theme => ({
+  dialogHeader:{
+    display: 'flex',
+  },
+  dialogTitle: {
+    flexGrow: 1
+  }
+}))
 export default (props) => {
   const {
     publishDialogOpen, 
@@ -19,17 +29,22 @@ export default (props) => {
     loading
   } = props
   const item = publishDialogData.item
+  const classes = useStyles()
   return (
     <div>
       <Dialog
         open={publishDialogOpen}
-        onClose={handlePublishDialogClose}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
         fullWidth={false}
         maxWidth={'xl'}
       >
-        <DialogTitle id="alert-dialog-title">{item.csv_file_name}</DialogTitle>
+        <div className={classes.dialogHeader}>
+          <DialogTitle id="alert-dialog-title" className={classes.dialogTitle}>{item.csv_file_name}</DialogTitle>
+          <Button onClick={handlePublishDialogClose} color="primary" disabled={loading}>
+              <CloseIcon />
+          </Button>
+        </div>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             Please Decide The Following:
