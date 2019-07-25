@@ -4,4 +4,5 @@ from . import views, APP_NAME
 
 urlpatterns = [
    url(r'^$', views.index, name='%s.index' % APP_NAME),
+   url(r'^upload/', views.upload, name='%s.upload' % APP_NAME),
 ]
