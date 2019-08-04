@@ -11,6 +11,7 @@ export default class CSVManager extends Component {
             publishDialogData: {
                 item: {},
                 error: '',
+                formErrors: undefined,
             },
             loading: false,
             listLoading: false,
@@ -19,6 +20,7 @@ export default class CSVManager extends Component {
         // globalURLS are predefined in index.html otherwise use the following defaults
         this.urls = globalURLS
         this.onDrop = this.onDrop.bind(this)
+        this.validateFormData = this.validateFormData.bind(this)
         this.fetchListOfCsvFiles = this.fetchListOfCsvFiles.bind(this)
         this.handlePublishDialogClose = this.handlePublishDialogClose.bind(this)
         this.handlePublishDialogOpen = this.handlePublishDialogOpen.bind(this)
@@ -53,14 +55,43 @@ export default class CSVManager extends Component {
             }
         )
     }
+    validateFormData(item){
+        let validateFieldName = (fieldName) => {
+            return fieldName && fieldName.length > 0
+        }
+        let validateTableName = (tableName) => {
+            let re = /^[a-z0-9_]{1,63}$/
+            return tableName && re.test(tableName)
+        }
+        let formErrors = undefined
+        if (!validateTableName(item.table_name)) {
+            formErrors = {
+                ...formErrors,
+                table_name: true
+            }
+        }
+        if(!validateFieldName(item.lat_field_name)) {
+            formErrors = {
+                ...formErrors,
+                lat_field_name: true
+            }
+        }
+        if(!validateFieldName(item.lon_field_name)) {
+            formErrors = {
+                ...formErrors,
+                lon_field_name: true
+            }
+        }
+        return formErrors
+    }
     handlePublishDialogPublish() {
         let item = this.state.publishDialogData.item;
-        let re = /^[a-z0-9_]{1,63}$/
+        let formErrors = this.validateFormData(item)
+        debugger
         this.setState({
             loading: true,
         }, () => {
-
-            if (item.table_name && re.test(item.table_name)) {
+            if (!formErrors) {
                 let form = new FormData();
                 form.append('id', item.id)
                 form.append('lat_field_name', item.lat_field_name)
@@ -81,6 +112,7 @@ export default class CSVManager extends Component {
                                         publishDialogData: {
                                             ...this.state.publishDialogData,
                                             error: error.message,
+                                            formErrors: undefined,
                                         },
                                         loading: false
                                     })
@@ -93,6 +125,7 @@ export default class CSVManager extends Component {
                                             publishDialogData: {
                                                 ...this.state.publishDialogData,
                                                 error: '',
+                                                formErrors: undefined,
                                             },
                                             loading: false
                                         }, () => { this.fetchListOfCsvFiles() })
@@ -105,7 +138,8 @@ export default class CSVManager extends Component {
                 this.setState({
                     publishDialogData: {
                         ...this.state.publishDialogData,
-                        error: "Invalid table name! Must be Alphanumeric Ex: table_name_1, Max length: 63 character",
+                        // error: "Invalid table name! Must be Alphanumeric Ex: table_name_1, Max length: 63 character",
+                        formErrors: formErrors,
                     },
                     loading: false,
                 })
@@ -118,7 +152,8 @@ export default class CSVManager extends Component {
             loading: false,
             publishDialogData: {
                 ...this.state.publishDialogData,
-                error: ''
+                error: '',
+                formErrors: undefined,
             }
         })
     }

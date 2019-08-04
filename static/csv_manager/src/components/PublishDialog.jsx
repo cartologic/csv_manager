@@ -12,7 +12,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import SelectForm from './SelectForm'
 
 const useStyles = makeStyles(theme => ({
-  dialogHeader:{
+  dialogHeader: {
     display: 'flex',
   },
   dialogTitle: {
@@ -21,14 +21,14 @@ const useStyles = makeStyles(theme => ({
 }))
 export default (props) => {
   const {
-    publishDialogOpen, 
-    handlePublishDialogClose, 
+    publishDialogOpen,
+    handlePublishDialogClose,
     publishDialogData,
     handlePublishDialogPublish,
     handlePublishDialogDelete,
-    loading
+    loading,
   } = props
-  const item = publishDialogData.item
+  const { formErrors, item } = publishDialogData
   const classes = useStyles()
   return (
     <div>
@@ -42,7 +42,7 @@ export default (props) => {
         <div className={classes.dialogHeader}>
           <DialogTitle id="alert-dialog-title" className={classes.dialogTitle}>{item.csv_file_name}</DialogTitle>
           <Button onClick={handlePublishDialogClose} color="primary" disabled={loading}>
-              <CloseIcon />
+            <CloseIcon />
           </Button>
         </div>
         <DialogContent>
@@ -50,14 +50,17 @@ export default (props) => {
             Please Decide The Following:
           </DialogContentText>
           {
-            publishDialogData.error.length > 0 &&
-            <FormHelperText error>{`Error: ${publishDialogData.error}`}</FormHelperText>
+            publishDialogData.error.length > 0 ?
+            <FormHelperText error>{`Error: ${publishDialogData.error}`}</FormHelperText> :
+            formErrors && formErrors.table_name && 
+            <FormHelperText error>{`Error: Invalid table name! Must be Alphanumeric Ex: table_name_1, Max length: 63 character`}</FormHelperText>
+            
           }
-          <SelectForm item={item} handleSelectChange={props.handleSelectChange}/>
+          <SelectForm formErrors={formErrors} item={item} handleSelectChange={props.handleSelectChange} />
         </DialogContent>
         <DialogActions>
           {loading && <CircularProgress size={20} />}
-           <Button onClick={handlePublishDialogDelete} color="primary" disabled={loading}>
+          <Button onClick={handlePublishDialogDelete} color="primary" disabled={loading}>
             Delete
           </Button>
           <Button onClick={handlePublishDialogPublish} color="primary" disabled={loading}>

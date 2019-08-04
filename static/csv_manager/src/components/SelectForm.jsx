@@ -31,7 +31,8 @@ export default (props) => {
   const classes = useStyles();
   const {
     item,
-    handleSelectChange
+    handleSelectChange,
+    formErrors
   } = props
   const values = {
     lon: item.lon_field_name,
@@ -41,7 +42,7 @@ export default (props) => {
   }
   return (
     <form className={classes.root} autoComplete="off" id={'publish-select-form'}>
-      <FormControl className={classes.formControl}>
+      <FormControl className={classes.formControl} error={formErrors && formErrors.table_name || false}>
         <TextField
           id="table-name"
           label="Name"
@@ -53,7 +54,7 @@ export default (props) => {
         />
         <FormHelperText>Please Enter Table Name</FormHelperText>
       </FormControl>
-      <FormControl className={classes.formControl}>
+      <FormControl className={classes.formControl} error={formErrors && formErrors.lon_field_name || false}>
         <InputLabel htmlFor="lon-helper">{'Lon / X'}</InputLabel>
         <Select
           value={values.lon}
@@ -70,7 +71,7 @@ export default (props) => {
         <FormHelperText>Please Select X or Longitude Column</FormHelperText>
       </FormControl>
 
-      <FormControl className={classes.formControl}>
+      <FormControl className={classes.formControl} error={formErrors && formErrors.lat_field_name || false}>
         <InputLabel htmlFor="lat-helper">{'Lat / Y'}</InputLabel>
         <Select
           value={values.lat}
