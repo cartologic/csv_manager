@@ -12,6 +12,7 @@ export default class CSVManager extends Component {
                 item: {},
                 error: '',
                 formErrors: undefined,
+                layerURL: undefined,
             },
             loading: false,
             listLoading: false,
@@ -112,6 +113,7 @@ export default class CSVManager extends Component {
                                             ...this.state.publishDialogData,
                                             error: error.message,
                                             formErrors: undefined,
+                                            layerURL: undefined,
                                         },
                                         loading: false
                                     })
@@ -125,6 +127,7 @@ export default class CSVManager extends Component {
                                                 ...this.state.publishDialogData,
                                                 error: '',
                                                 formErrors: undefined,
+                                                layerURL: globalURLS.layerDetail(response.layer_name)
                                             },
                                             loading: false
                                         }, () => { this.fetchListOfCsvFiles() })
@@ -138,6 +141,7 @@ export default class CSVManager extends Component {
                     publishDialogData: {
                         ...this.state.publishDialogData,
                         formErrors: formErrors,
+                        layerURL: undefined,
                     },
                     loading: false,
                 })
@@ -152,6 +156,7 @@ export default class CSVManager extends Component {
                 ...this.state.publishDialogData,
                 error: '',
                 formErrors: undefined,
+                layerURL: undefined,
             }
         })
     }

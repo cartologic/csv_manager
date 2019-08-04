@@ -18,6 +18,10 @@
         layerUpload:"{% url 'layer_upload' %}",
         dataManager: "{% url 'data_manager.index' %}",
         baseURL: "{% url 'home' %}",
+        layers: "{% url 'layer_browse' %}",
+        layerDetail: function (name) {
+            return globalURLS.layers + name
+        }
     }
 </script>
 <script src="{{ STATIC_URL }}csv_manager/dist/csvManager.bundle.js"></script>

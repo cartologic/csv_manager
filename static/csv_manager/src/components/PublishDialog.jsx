@@ -10,6 +10,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import CloseIcon from '@material-ui/icons/Close'
 import { makeStyles } from '@material-ui/core/styles';
 import SelectForm from './SelectForm'
+import Link from '@material-ui/core/Link';
 
 const useStyles = makeStyles(theme => ({
   dialogHeader: {
@@ -60,6 +61,12 @@ export default (props) => {
         </DialogContent>
         <DialogActions>
           {loading && <CircularProgress size={20} />}
+          {
+            publishDialogData.layerURL &&   
+            <Link underline={'none'} color="inherit" href={publishDialogData.layerURL}>
+              <Button color="inherit">View Layer</Button>
+            </Link>
+          }
           <Button onClick={handlePublishDialogDelete} color="primary" disabled={loading}>
             Delete
           </Button>
