@@ -117,7 +117,7 @@ def publish_in_geoserver(table_name):
 
 def publish_in_geonode(table_name, owner):
     gn_publisher = GeonodePublisher(owner=owner)
-    gn_publisher.publish(table_name)
+    return gn_publisher.publish(table_name)
 
 
 def delete_csv(request):

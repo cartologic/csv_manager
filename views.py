@@ -98,13 +98,13 @@ def publish(request):
 
             # 6. GeoNode Publish
             try:
-                publish_in_geonode(table_name, owner=request.user)
+                layer = publish_in_geonode(table_name, owner=request.user)
             except:
                 # TODO: roll back the delete geoserver record and db name
                 json_response = {"status": False, "message": "Could not publish in GeoNode", 'warnings': warnings}
                 return JsonResponse(json_response, status=500)
 
-            json_response = {"status": True, "message": "CSV Updated successfully", 'warnings': warnings}
+            json_response = {"status": True, "message": "CSV Updated successfully", 'warnings': warnings, "layer_name": layer.alternate}
             return JsonResponse(json_response, status=200)
         json_response = {"status": False, "message": "Error While Publishing!", }
         return JsonResponse(json_response, status=500)
