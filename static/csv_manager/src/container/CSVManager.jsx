@@ -87,7 +87,6 @@ export default class CSVManager extends Component {
     handlePublishDialogPublish() {
         let item = this.state.publishDialogData.item;
         let formErrors = this.validateFormData(item)
-        debugger
         this.setState({
             loading: true,
         }, () => {
@@ -138,7 +137,6 @@ export default class CSVManager extends Component {
                 this.setState({
                     publishDialogData: {
                         ...this.state.publishDialogData,
-                        // error: "Invalid table name! Must be Alphanumeric Ex: table_name_1, Max length: 63 character",
                         formErrors: formErrors,
                     },
                     loading: false,
@@ -188,12 +186,21 @@ export default class CSVManager extends Component {
             .then(data => this.setState({ listLoading: false, csvItems: data.objects }))
     }
     onDrop(accepted, rejected) {
+        const removeSpecialCharacters = (str) => {
+            return str.replace(/[^A-Z0-9.]+/ig, "_");
+        }
         for (let i = 0; i < accepted.length; i++) {
             this.setState({
                 uploadLoading: true,
             }, () => {
+                let file = new File(
+                    [accepted[i]], 
+                    removeSpecialCharacters(accepted[i].name).toLowerCase(), 
+                    {type: accepted[i].type,},
+                    accepted[i].preview
+                );
                 let formData = new FormData();
-                formData.append('csv_file', accepted[i])
+                formData.append('csv_file', file)
                 formData.append('csrfmiddlewaretoken', getCRSFToken())
                 fetch(this.urls.uploadCSV, {
                     method: 'POST',
