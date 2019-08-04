@@ -115,8 +115,8 @@ def publish_in_geoserver(table_name):
     gs_publisher.publish_postgis_layer(table_name, table_name)
 
 
-def publish_in_geonode(table_name):
-    gn_publisher = GeonodePublisher()
+def publish_in_geonode(table_name, owner):
+    gn_publisher = GeonodePublisher(owner=owner)
     gn_publisher.publish(table_name)
 
 

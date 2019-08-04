@@ -98,7 +98,7 @@ def publish(request):
 
             # 6. GeoNode Publish
             try:
-                publish_in_geonode(table_name)
+                publish_in_geonode(table_name, owner=request.user)
             except:
                 # TODO: roll back the delete geoserver record and db name
                 json_response = {"status": False, "message": "Could not publish in GeoNode", 'warnings': warnings}
