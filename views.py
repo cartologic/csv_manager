@@ -83,7 +83,10 @@ def publish(request):
             # 4. Create Table in Postgres using OGR2OGR
             out, err = create_postgres_table(vrt_paht, table_name)
             if len(err) > 0:
-                if re.search(r'(\berror\b)|(\bError\b)|(\bERROR\b)|(\FAILURE\b)', err):
+                # TODO: roll back the database table here!
+                print('errors: ', err)
+                print('out: ', out)
+                if re.search(r'(\berror\b)|(\bError\b)|(\bERROR\b)|(\bFAILURE\b)', err):
                     json_response = {"status": False, "message": "Error While Publishing to PostgreSQL!", }
                     return JsonResponse(json_response, status=500)
                 warnings = err
