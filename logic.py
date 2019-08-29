@@ -43,6 +43,23 @@ def create_postgres_table(vrt_path, table_name):
     return execute(cmd)
 
 
+def csv_create_postgres_table(csv_path, table_name, srs, X_POSSIBLE_NAMES, Y_POSSIBLE_NAMES):
+    db_settings = get_db_settings()
+    cmd = '''ogr2ogr -nln {} -f PostgreSQL PG:"dbname='{}' host='{}' port='{}'  user='{}' password='{}'" -oo AUTODETECT_TYPE=YES -oo X_POSSIBLE_NAMES={} -oo Y_POSSIBLE_NAMES={} -a_srs {} {}'''.format(
+        table_name,
+        db_settings['db_name'],
+        db_settings['host'],
+        db_settings['port'],
+        db_settings['user'],
+        db_settings['password'],
+        X_POSSIBLE_NAMES,
+        Y_POSSIBLE_NAMES,
+        srs,
+        csv_path,
+    )
+    return execute(cmd)
+
+
 def handle_uploaded_file(f, path):
     with open(path, 'wb+') as destination:
         for chunk in f.chunks():
