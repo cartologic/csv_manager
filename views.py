@@ -17,7 +17,7 @@ from .logic import (
     get_field_names,
     mkdirs,
     handle_uploaded_file,
-    create_postgres_table,
+    csv_create_postgres_table,
     create_xy_vrt,
     publish_in_geonode,
     publish_in_geoserver,
@@ -78,10 +78,14 @@ def publish(request):
                 return JsonResponse(json_response, status=500)
 
             # 3. create VRT
-            vrt_paht = create_xy_vrt(csv_upload_instance)
+            # vrt_paht = create_xy_vrt(csv_upload_instance)
+            X_POSSIBLE_NAMES = str(csv_upload_instance.lon_field_name)
+            Y_POSSIBLE_NAMES = str(csv_upload_instance.lat_field_name)
+            srs = str(csv_upload_instance.srs)
+            csv_path = str(csv_upload_instance.csv_file.path)
 
             # 4. Create Table in Postgres using OGR2OGR
-            out, err = create_postgres_table(vrt_paht, table_name)
+            out, err = csv_create_postgres_table(csv_path, table_name, srs, X_POSSIBLE_NAMES, Y_POSSIBLE_NAMES)
             if len(err) > 0:
                 # TODO: roll back the database table here!
                 print('errors: ', err)
