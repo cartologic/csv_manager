@@ -21,9 +21,11 @@ from .logic import (
     create_xy_vrt,
     publish_in_geonode,
     publish_in_geoserver,
-    table_exist
+    table_exist,
+    delete_layer
 )
 from .models import CSVUpload
+from .utils import create_connection_string
 
 
 @login_required
@@ -61,6 +63,7 @@ def upload(request):
 def publish(request):
     warnings = ''
     if request.method == 'POST':
+        connection_string = create_connection_string()
         csv_upload_instance = CSVUpload.objects.get(pk=request.POST['id'])
         form = CSVPublishForm(request.POST, instance=csv_upload_instance)
         if form.is_valid():
@@ -87,10 +90,11 @@ def publish(request):
             # 4. Create Table in Postgres using OGR2OGR
             out, err = csv_create_postgres_table(csv_path, table_name, srs, X_POSSIBLE_NAMES, Y_POSSIBLE_NAMES)
             if len(err) > 0:
-                # TODO: roll back the database table here!
                 print('errors: ', err)
                 print('out: ', out)
                 if re.search(r'(\berror\b)|(\bError\b)|(\bERROR\b)|(\bFAILURE\b)', err):
+                    # Roll back and delete the created table in database
+                    delete_layer(connection_string, str(table_name))
                     json_response = {"status": False, "message": "Error While Publishing to PostgreSQL!", }
                     return JsonResponse(json_response, status=500)
                 warnings = err
@@ -99,7 +103,8 @@ def publish(request):
             try:
                 publish_in_geoserver(table_name)
             except:
-                # TODO: roll back the database table here!
+                # Roll back and delete the created table in database
+                delete_layer(connection_string, str(table_name))
                 json_response = {"status": False, "message": "Could not publish to GeoServer", 'warnings': warnings}
                 return JsonResponse(json_response, status=500)
 
@@ -107,7 +112,8 @@ def publish(request):
             try:
                 layer = publish_in_geonode(table_name, owner=request.user)
             except:
-                # TODO: roll back the delete geoserver record and db name
+                # Roll back and delete the created table in database
+                delete_layer(connection_string, str(table_name))
                 json_response = {"status": False, "message": "Could not publish in GeoNode", 'warnings': warnings}
                 return JsonResponse(json_response, status=500)
 

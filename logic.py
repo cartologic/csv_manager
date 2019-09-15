@@ -10,6 +10,8 @@ from geonode.geoserver.helpers import ogc_server_settings
 from .models import CSVUpload
 from .publishers import GeoserverPublisher, GeonodePublisher
 
+from osgeo import ogr
+
 
 def execute(cmd):
     p = subprocess.Popen(
@@ -142,3 +144,11 @@ def delete_csv(request):
     csv_instance.delete()
     json_response = {"status": True, "message": "CSV Deleted successfully", }
     return JsonResponse(json_response, status=200)
+
+
+def delete_layer(connection_string, layer,):
+    ''' Deletes a layer in postgreSQL database'''
+    conn = ogr.Open(connection_string)
+    conn.DeleteLayer(layer)
+    # Close Connection
+    conn = None
