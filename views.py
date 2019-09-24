@@ -45,17 +45,20 @@ def upload(request):
             csv_name = request.FILES['csv_file'].name
             today = datetime.now()
             date_as_path = today.strftime("%Y/%m/%d")
-            csv_path = os.path.join('csv_manager', request.user.username, date_as_path, str(uuid.uuid4()))
+            csv_path = os.path.join(
+                'csv_manager', request.user.username, date_as_path, str(uuid.uuid4()))
             full_path = os.path.join(settings.MEDIA_ROOT, csv_path)
             mkdirs(full_path)
-            handle_uploaded_file(request.FILES['csv_file'], os.path.join(full_path, csv_name))
+            handle_uploaded_file(
+                request.FILES['csv_file'], os.path.join(full_path, csv_name))
             CSVUpload.objects.create(csv_file=os.path.join(csv_path, csv_name), user=request.user,
                                      csv_file_name=csv_name,
                                      features_count=get_rows_count(os.path.join(full_path, csv_name)))
             json_response = {"status": True, "message": "CSV uploaded successfully",
                              "field_names": get_field_names(os.path.join(full_path, csv_name))}
             return JsonResponse(json_response, status=200)
-        json_response = {"status": True, "message": "Error While uploading CSV".format(error_message)}
+        json_response = {
+            "status": True, "message": "Error While uploading CSV".format(error_message)}
         return JsonResponse(json_response, status=500)
 
 
@@ -71,13 +74,15 @@ def publish(request):
             try:
                 table_name = form.cleaned_data['table_name']
             except ValidationError as e:
-                json_response = {"status": False, "message": "{}".format(e.message), }
+                json_response = {"status": False,
+                                 "message": "{}".format(e.message), }
                 return JsonResponse(json_response, status=500)
             form.save(commit=True)
 
             # 2. Check if table exist in the database
             if table_exist(table_name):
-                json_response = {"status": False, "message": "Table Already Exists!", }
+                json_response = {"status": False,
+                                 "message": "Table Already Exists!", }
                 return JsonResponse(json_response, status=500)
 
             # 3. create VRT
@@ -88,14 +93,19 @@ def publish(request):
             csv_path = str(csv_upload_instance.csv_file.path)
 
             # 4. Create Table in Postgres using OGR2OGR
-            out, err = csv_create_postgres_table(csv_path, table_name, srs, X_POSSIBLE_NAMES, Y_POSSIBLE_NAMES)
+            out, err = csv_create_postgres_table(
+                csv_path, table_name, srs, X_POSSIBLE_NAMES, Y_POSSIBLE_NAMES)
             if len(err) > 0:
                 print('errors: ', err)
                 print('out: ', out)
                 if re.search(r'(\berror\b)|(\bError\b)|(\bERROR\b)|(\bFAILURE\b)', err):
                     # Roll back and delete the created table in database
                     delete_layer(connection_string, str(table_name))
-                    json_response = {"status": False, "message": "Error While Publishing to PostgreSQL!", }
+                    json_response = {
+                        "status": False, "message": "Error While Publishing to database: {}".format(err)}
+                    if re.search(r'(\bUTF8\b)', err):
+                        json_response = {
+                            "status": False, "message": "Seems that some data are not stored in UTF-8 format!".format(err)}
                     return JsonResponse(json_response, status=500)
                 warnings = err
 
@@ -105,7 +115,8 @@ def publish(request):
             except:
                 # Roll back and delete the created table in database
                 delete_layer(connection_string, str(table_name))
-                json_response = {"status": False, "message": "Could not publish to GeoServer", 'warnings': warnings}
+                json_response = {
+                    "status": False, "message": "Could not publish to GeoServer", 'warnings': warnings}
                 return JsonResponse(json_response, status=500)
 
             # 6. GeoNode Publish
@@ -114,10 +125,13 @@ def publish(request):
             except:
                 # Roll back and delete the created table in database
                 delete_layer(connection_string, str(table_name))
-                json_response = {"status": False, "message": "Could not publish in GeoNode", 'warnings': warnings}
+                json_response = {
+                    "status": False, "message": "Could not publish in GeoNode", 'warnings': warnings}
                 return JsonResponse(json_response, status=500)
 
-            json_response = {"status": True, "message": "CSV Updated successfully", 'warnings': warnings, "layer_name": layer.alternate}
+            json_response = {"status": True, "message": "CSV Updated successfully",
+                             'warnings': warnings, "layer_name": layer.alternate}
             return JsonResponse(json_response, status=200)
-        json_response = {"status": False, "message": "Error While Publishing!", }
+        json_response = {"status": False,
+                         "message": "Error While Publishing!", }
         return JsonResponse(json_response, status=500)
