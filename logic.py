@@ -149,6 +149,10 @@ def delete_csv(request):
 def delete_layer(connection_string, layer,):
     ''' Deletes a layer in postgreSQL database'''
     conn = ogr.Open(connection_string)
-    conn.DeleteLayer(layer)
+    try:
+        conn.DeleteLayer(layer)
+    except ValueError as e:
+        # Mostly the layer could not be found to delete!
+        print('Error while deleting {}: {}'.format(layer, e.message)) 
     # Close Connection
     conn = None
