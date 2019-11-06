@@ -9,6 +9,7 @@ from geonode.geoserver.helpers import ogc_server_settings
 
 from .models import CSVUpload
 from .publishers import GeoserverPublisher, GeonodePublisher
+from .constants import GeometryTypeChoices
 
 from osgeo import ogr
 
@@ -101,6 +102,34 @@ def create_xy_vrt(csv_upload_instance):
         csv_upload_instance.srs,
         csv_upload_instance.lon_field_name,
         csv_upload_instance.lat_field_name
+    )
+    csv_dir_path = os.path.dirname(csv_upload_instance.csv_file.path)
+    path = os.path.join(settings.MEDIA_ROOT, csv_dir_path, '{}.vrt'.format(csv_layer_name))
+    # remove file if exists and create another
+    if os.path.exists(path):
+        os.remove(path)
+    with open(path, 'wb') as v:
+        v.write(vrt_template)
+    return path
+
+
+def create_wkt_vrt(csv_upload_instance):
+    # csv layer name is the csv file name without extension
+    csv_layer_name = os.path.splitext(csv_upload_instance.csv_name)[0]
+    vrt_template = '''<OGRVRTDataSource>
+    <OGRVRTLayer name="{}">
+        <SrcDataSource>{}</SrcDataSource>
+        <GeometryType>{}</GeometryType>
+        <LayerSRS>{}</LayerSRS>
+        <GeometryField encoding="WKT" field="{}"/>
+    </OGRVRTLayer>
+</OGRVRTDataSource>
+'''.format(
+        csv_layer_name,
+        csv_upload_instance.csv_file.path,
+        csv_upload_instance.srs,
+        GeometryTypeChoices[csv_upload_instance.geometry_type].value,
+        csv_upload_instance.wkt_field_name,
     )
     csv_dir_path = os.path.dirname(csv_upload_instance.csv_file.path)
     path = os.path.join(settings.MEDIA_ROOT, csv_dir_path, '{}.vrt'.format(csv_layer_name))
