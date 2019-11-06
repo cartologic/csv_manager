@@ -2,6 +2,7 @@ import os
 
 from django.db import models
 from geonode.people.models import Profile
+from .constants import GeometryTypeChoices
 
 CSV_FILE_PERMISSIONS = (
     ('view_csv', 'View CSV'),
@@ -33,6 +34,13 @@ class CSVUpload(models.Model):
     updated_at = models.DateTimeField(auto_now=True, auto_now_add=False)
     lon_field_name = models.CharField(max_length=55, blank=True)
     lat_field_name = models.CharField(max_length=55, blank=True)
+    wkt_field_name = models.CharField(max_length=55, blank=True)
+    geometry_type = models.CharField(
+        max_length=55,
+        blank=True,
+        choices=GeometryTypeChoices.get_choices(),
+        default=GeometryTypeChoices.UNKNOWN.name
+    )
     the_geom_field_name = models.CharField(max_length=55, blank=True)
     srs = models.CharField(max_length=30, blank=True, default='WGS84')
     features_count = models.IntegerField(blank=True, default=0)
