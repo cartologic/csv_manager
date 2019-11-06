@@ -33,7 +33,8 @@ class CSVUploadResource(ModelResource):
             "id": ALL,
             "uploaded_at": ALL,
             "updated_at": ALL,
-            "user": ALL_WITH_RELATIONS
+            "user": ALL_WITH_RELATIONS,
+            'geometry_type': ALL,
         }
         excludes = ['csv_file', ]
 
