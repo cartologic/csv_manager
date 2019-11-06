@@ -98,6 +98,10 @@ export default class CSVManager extends Component {
                 form.append('lon_field_name', item.lon_field_name)
                 form.append('srs', item.srs)
                 form.append('table_name', item.table_name)
+
+                form.append('wkt_field_name', '')
+                form.append('geometry_type', 'POINTXY')
+
                 form.append('csrfmiddlewaretoken', getCRSFToken())
                 fetch(this.urls.publishCSV, {
                     method: 'POST',

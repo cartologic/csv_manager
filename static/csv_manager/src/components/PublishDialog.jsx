@@ -20,6 +20,31 @@ const useStyles = makeStyles(theme => ({
     flexGrow: 1
   }
 }))
+const DialogActionsArea = props => {
+  const {
+    loading,
+    publishDialogData,
+    handlePublishDialogDelete,
+    handlePublishDialogPublish,
+  } = props
+  return (
+    <DialogActions>
+      {loading && <CircularProgress size={20} />}
+      {
+        publishDialogData.layerURL &&
+        <Link underline={'none'} color="inherit" href={publishDialogData.layerURL}>
+          <Button color="inherit">View Layer</Button>
+        </Link>
+      }
+      <Button onClick={handlePublishDialogDelete} color="primary" disabled={loading}>
+        Delete
+      </Button>
+      <Button onClick={handlePublishDialogPublish} color="primary" disabled={loading}>
+        Publish
+      </Button>
+    </DialogActions>
+  )
+}
 export default (props) => {
   const {
     publishDialogOpen,
@@ -28,8 +53,10 @@ export default (props) => {
     handlePublishDialogPublish,
     handlePublishDialogDelete,
     loading,
+    onWKTClick,
   } = props
   const { formErrors, item } = publishDialogData
+  const wkt = item.wkt_field_name && item.wkt_field_name.length > 0 
   const classes = useStyles()
   return (
     <div>
@@ -47,33 +74,29 @@ export default (props) => {
           </Button>
         </div>
         <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            Please Decide The Following:
-          </DialogContentText>
+        <Button onClick={onWKTClick} color="primary" disabled={!wkt}>
+          WKT
+        </Button>
+        <Button onClick={onWKTClick} color="primary" disabled={wkt}>
+          XY
+        </Button>
+        </DialogContent>
+        <DialogContent>
           {
             publishDialogData.error.length > 0 ?
-            <FormHelperText error>{`Error: ${publishDialogData.error}`}</FormHelperText> :
-            formErrors && formErrors.table_name && 
-            <FormHelperText error>{`Error: Invalid table name! Must be Alphanumeric Ex: table_name_1, Max length: 63 character`}</FormHelperText>
-            
+              <FormHelperText error>{`Error: ${publishDialogData.error}`}</FormHelperText> :
+              formErrors && formErrors.table_name &&
+              <FormHelperText error>{`Error: Invalid table name! Must be Alphanumeric Ex: table_name_1, Max length: 63 character`}</FormHelperText>
+
           }
           <SelectForm formErrors={formErrors} item={item} handleSelectChange={props.handleSelectChange} />
         </DialogContent>
-        <DialogActions>
-          {loading && <CircularProgress size={20} />}
-          {
-            publishDialogData.layerURL &&   
-            <Link underline={'none'} color="inherit" href={publishDialogData.layerURL}>
-              <Button color="inherit">View Layer</Button>
-            </Link>
-          }
-          <Button onClick={handlePublishDialogDelete} color="primary" disabled={loading}>
-            Delete
-          </Button>
-          <Button onClick={handlePublishDialogPublish} color="primary" disabled={loading}>
-            Publish
-          </Button>
-        </DialogActions>
+        <DialogActionsArea
+          loading={loading}
+          publishDialogData={publishDialogData}
+          handlePublishDialogDelete={handlePublishDialogDelete}
+          handlePublishDialogPublish={handlePublishDialogPublish}
+         />
       </Dialog>
     </div>
   )
