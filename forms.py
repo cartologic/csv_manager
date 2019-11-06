@@ -16,7 +16,7 @@ class CSVPublishForm(forms.ModelForm):
 
     class Meta:
         model = CSVUpload
-        fields = ['id', 'lat_field_name', 'lon_field_name', 'srs', ]
+        fields = ['id', 'lat_field_name', 'lon_field_name', 'srs', 'wkt_field_name', 'geometry_type']
 
     def clean_table_name(self):
         pattern = r"^[a-z0-9_]{1,63}$"
