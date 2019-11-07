@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import MainPage from '../components/MainPage'
-import { getCRSFToken } from '../utils'
+import { getCRSFToken, validateFieldName,  validateTableName } from '../utils'
 
 export default class CSVManager extends Component {
     constructor(props) {
@@ -21,7 +21,8 @@ export default class CSVManager extends Component {
         // globalURLS are predefined in index.html otherwise use the following defaults
         this.urls = globalURLS
         this.onDrop = this.onDrop.bind(this)
-        this.validateFormData = this.validateFormData.bind(this)
+        this.validateXYFormData = this.validateXYFormData.bind(this)
+        this.validateWKTFormData = this.validateWKTFormData.bind(this)
         this.fetchListOfCsvFiles = this.fetchListOfCsvFiles.bind(this)
         this.handlePublishDialogClose = this.handlePublishDialogClose.bind(this)
         this.handlePublishDialogOpen = this.handlePublishDialogOpen.bind(this)
@@ -56,14 +57,7 @@ export default class CSVManager extends Component {
             }
         )
     }
-    validateFormData(item){
-        let validateFieldName = (fieldName) => {
-            return fieldName && fieldName.length > 0
-        }
-        let validateTableName = (tableName) => {
-            let re = /^[a-z0-9_]{1,63}$/
-            return tableName && re.test(tableName)
-        }
+    validateXYFormData(item){
         let formErrors = undefined
         if (!validateTableName(item.table_name)) {
             formErrors = {
@@ -85,9 +79,31 @@ export default class CSVManager extends Component {
         }
         return formErrors
     }
-    handlePublishDialogPublish() {
+    validateWKTFormData(item){
+        let formErrors = undefined
+        if (!validateTableName(item.table_name)) {
+            formErrors = {
+                ...formErrors,
+                table_name: true
+            }
+        }
+        if(!validateFieldName(item.wkt_field_name)) {
+            formErrors = {
+                ...formErrors,
+                wkt_field_name: true
+            }
+        }
+        if(!validateFieldName(item.geometry_type)) {
+            formErrors = {
+                ...formErrors,
+                geometry_type: true
+            }
+        }
+        return formErrors
+    }
+    handlePublishDialogPublish(wkt=false) {
         let item = this.state.publishDialogData.item;
-        let formErrors = this.validateFormData(item)
+        let formErrors = wkt ? this.validateWKTFormData(item) : this.validateXYFormData(item)
         this.setState({
             loading: true,
         }, () => {
