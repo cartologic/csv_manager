@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -11,14 +11,23 @@ import CloseIcon from '@material-ui/icons/Close'
 import { makeStyles } from '@material-ui/core/styles';
 import SelectForm from './SelectForm'
 import Link from '@material-ui/core/Link';
+import {POINTXY, WKTTYPES,} from '../utils/geomtry-types'
 
+const uiWKTTYPES = [...WKTTYPES, 'WKT']
 const useStyles = makeStyles(theme => ({
   dialogHeader: {
     display: 'flex',
   },
   dialogTitle: {
     flexGrow: 1
-  }
+  },
+  typesButtons:{
+    display: 'flex',
+    flexDirection: 'row',
+  },
+  typeButton:{
+    margin: '1px 5px',
+  },
 }))
 const DialogActionsArea = props => {
   const {
@@ -26,6 +35,7 @@ const DialogActionsArea = props => {
     publishDialogData,
     handlePublishDialogDelete,
     handlePublishDialogPublish,
+    wkt,
   } = props
   return (
     <DialogActions>
@@ -39,13 +49,13 @@ const DialogActionsArea = props => {
       <Button onClick={handlePublishDialogDelete} color="primary" disabled={loading}>
         Delete
       </Button>
-      <Button onClick={handlePublishDialogPublish} color="primary" disabled={loading}>
+      <Button onClick={()=>{handlePublishDialogPublish(wkt)}} color="primary" disabled={loading}>
         Publish
       </Button>
     </DialogActions>
   )
 }
-export default (props) => {
+const PublishDialogData = (props) => {
   const {
     publishDialogOpen,
     handlePublishDialogClose,
@@ -53,10 +63,16 @@ export default (props) => {
     handlePublishDialogPublish,
     handlePublishDialogDelete,
     loading,
-    onWKTClick,
   } = props
   const { formErrors, item } = publishDialogData
-  const wkt = item.wkt_field_name && item.wkt_field_name.length > 0 
+  const [wkt, setWKT] = useState('')
+  const onWKTClick = wkt => {
+    setWKT(wkt)
+  }
+  useEffect(()=>{
+    if(item.geometry_type === '') setWKT('POINTXY')
+    else setWKT(item.geometry_type)
+  }, [item.geometry_type])
   const classes = useStyles()
   return (
     <div>
@@ -74,12 +90,14 @@ export default (props) => {
           </Button>
         </div>
         <DialogContent>
-        <Button onClick={onWKTClick} color="primary" disabled={!wkt}>
-          WKT
-        </Button>
-        <Button onClick={onWKTClick} color="primary" disabled={wkt}>
-          XY
-        </Button>
+          <div className={classes.typesButton}>
+            <Button className={classes.typeButton} variant={wkt === POINTXY ? 'contained' : 'text'} onClick={()=>{onWKTClick('POINTXY')}} color="primary">
+              XY
+            </Button>
+            <Button className={classes.typeButton} variant={uiWKTTYPES.indexOf(wkt) !== -1 ? 'contained' : 'text'} onClick={()=>{onWKTClick('WKT')}} color="primary">
+              WKT
+            </Button>
+          </div>
         </DialogContent>
         <DialogContent>
           {
@@ -89,15 +107,18 @@ export default (props) => {
               <FormHelperText error>{`Error: Invalid table name! Must be Alphanumeric Ex: table_name_1, Max length: 63 character`}</FormHelperText>
 
           }
-          <SelectForm formErrors={formErrors} item={item} handleSelectChange={props.handleSelectChange} />
+          <SelectForm formErrors={formErrors} item={item} handleSelectChange={props.handleSelectChange} wkt={wkt !== POINTXY} />
         </DialogContent>
         <DialogActionsArea
           loading={loading}
           publishDialogData={publishDialogData}
           handlePublishDialogDelete={handlePublishDialogDelete}
           handlePublishDialogPublish={handlePublishDialogPublish}
+          wkt={wkt !== POINTXY}
          />
       </Dialog>
     </div>
   )
 }
+
+export default PublishDialogData;
