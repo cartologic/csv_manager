@@ -39,7 +39,6 @@ class CSVUpload(models.Model):
         max_length=55,
         blank=True,
         choices=GeometryTypeChoices.get_choices(),
-        default=GeometryTypeChoices.UNKNOWN.name
     )
     the_geom_field_name = models.CharField(max_length=55, blank=True)
     srs = models.CharField(max_length=30, blank=True, default='WGS84')

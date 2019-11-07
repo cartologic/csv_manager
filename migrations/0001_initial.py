@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ('lon_field_name', models.CharField(max_length=55, blank=True)),
                 ('lat_field_name', models.CharField(max_length=55, blank=True)),
                 ('wkt_field_name', models.CharField(max_length=55, blank=True)),
-                ('geometry_type', models.CharField(default=b'UNKNOWN', max_length=55, blank=True, choices=[(b'POINTXY', b'AS_XY'), (b'POINTXYZ', b'AS_XYZ'), (b'POINTYX', b'AS_YX'), (b'LINESTARTEND', b'start_end'), (b'LINE', b'wkbLineString'), (b'MULTILINE', b'wkbMultiLineString'), (b'MULTIPOINT', b'wkbMultiPoint'), (b'MULTIPOLYGON', b'wkbMultiPolygon'), (b'POINT', b'wkbPoint'), (b'POLYGON', b'wkbPolygon'), (b'UNKNOWN', b'wkbUnknown')])),
+                ('geometry_type', models.CharField(blank=True, max_length=55, choices=[(b'POINTXY', b'AS_XY'), (b'POINTXYZ', b'AS_XYZ'), (b'POINTYX', b'AS_YX'), (b'LINESTARTEND', b'start_end'), (b'LINE', b'wkbLineString'), (b'MULTILINE', b'wkbMultiLineString'), (b'MULTIPOINT', b'wkbMultiPoint'), (b'MULTIPOLYGON', b'wkbMultiPolygon'), (b'POINT', b'wkbPoint'), (b'POLYGON', b'wkbPolygon'), (b'UNKNOWN', b'wkbUnknown')])),
                 ('the_geom_field_name', models.CharField(max_length=55, blank=True)),
                 ('srs', models.CharField(default=b'WGS84', max_length=30, blank=True)),
                 ('features_count', models.IntegerField(default=0, blank=True)),
