@@ -7,6 +7,7 @@ import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import TextField from '@material-ui/core/TextField';
+import {WKTTYPES} from '../utils/geomtry-types'
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -73,18 +74,67 @@ const XYSelect = props => {
     </React.Fragment>
   )
 }
+const WKTSelect = props => {
+  const {
+    classes,
+    values,
+    handleSelectChange,
+    formErrors,
+    item,
+  } = props
+  return (
+    <React.Fragment>
+      <FormControl className={classes.formControl} error={formErrors && formErrors.wkt_field_name || false}>
+        <InputLabel htmlFor="lon-helper">{'Geometry Column'}</InputLabel>
+        <Select
+          value={values.wkt_field_name}
+          onChange={handleSelectChange}
+          input={<Input name="wkt_field_name" id="lon-helper" />}
+        >
+          <MenuItem value="">
+            <em>None</em>
+          </MenuItem>
+          {
+            item.fields_names && item.fields_names.length > 0 && get_item_fields(item)
+          }
+        </Select>
+        <FormHelperText>Select Geometry Column / Attribute</FormHelperText>
+      </FormControl>
+
+      <FormControl className={classes.formControl} error={formErrors && formErrors.geometry_type || false}>
+        <InputLabel htmlFor="lat-helper">{'Geom Type'}</InputLabel>
+        <Select
+          value={values.geometry_type}
+          onChange={handleSelectChange}
+          input={<Input name="geometry_type" id="lat-helper" />}
+        >
+          <MenuItem value="">
+            <em>None</em>
+          </MenuItem>
+          {
+            WKTTYPES.map((type, i) => (<MenuItem key={i} value={type}>{type}</MenuItem>))
+          }
+        </Select>
+        <FormHelperText>Select Geometry Type</FormHelperText>
+      </FormControl>
+    </React.Fragment>
+  )
+}
 export default (props) => {
   const classes = useStyles();
   const {
     item,
     handleSelectChange,
-    formErrors
+    formErrors,
+    wkt,
   } = props
   const values = {
     lon: item.lon_field_name,
     lat: item.lat_field_name,
     srs: item.srs,
-    table_name: item.table_name || ''
+    table_name: item.table_name || '',
+    wkt_field_name: item.wkt_field_name,
+    geometry_type: item.geometry_type,
   }
   return (
     <form className={classes.root} autoComplete="off" id={'publish-select-form'}>
@@ -100,14 +150,23 @@ export default (props) => {
         />
         <FormHelperText>Enter Table Name</FormHelperText>
       </FormControl>
-
-      <XYSelect 
-        classes={classes}
-        values={values}
-        handleSelectChange={handleSelectChange}
-        formErrors={formErrors}
-        item={item}
-      />
+      {
+        wkt ?
+        <WKTSelect 
+          classes={classes}
+          values={values}
+          handleSelectChange={handleSelectChange}
+          formErrors={formErrors}
+          item={item}
+        />:
+        <XYSelect 
+          classes={classes}
+          values={values}
+          handleSelectChange={handleSelectChange}
+          formErrors={formErrors}
+          item={item}
+        />
+      }
 
       <FormControl className={classes.formControl}>
         <InputLabel htmlFor="srs-helper">{'SRS / Projection'}</InputLabel>
