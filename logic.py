@@ -116,6 +116,7 @@ def create_xy_vrt(csv_upload_instance):
 def create_wkt_vrt(csv_upload_instance):
     # csv layer name is the csv file name without extension
     csv_layer_name = os.path.splitext(csv_upload_instance.csv_name)[0]
+    csv_dir_path = os.path.dirname(csv_upload_instance.csv_file.path)
     vrt_template = '''<OGRVRTDataSource>
     <OGRVRTLayer name="{}">
         <SrcDataSource>{}</SrcDataSource>
@@ -127,11 +128,10 @@ def create_wkt_vrt(csv_upload_instance):
 '''.format(
         csv_layer_name,
         csv_upload_instance.csv_file.path,
-        csv_upload_instance.srs,
         GeometryTypeChoices[csv_upload_instance.geometry_type].value,
+        csv_upload_instance.srs,
         csv_upload_instance.wkt_field_name,
     )
-    csv_dir_path = os.path.dirname(csv_upload_instance.csv_file.path)
     path = os.path.join(settings.MEDIA_ROOT, csv_dir_path, '{}.vrt'.format(csv_layer_name))
     # remove file if exists and create another
     if os.path.exists(path):
@@ -175,13 +175,13 @@ def delete_csv(request):
     return JsonResponse(json_response, status=200)
 
 
-def delete_layer(connection_string, layer,):
+def delete_layer(connection_string, layer, ):
     ''' Deletes a layer in postgreSQL database'''
     conn = ogr.Open(connection_string)
     try:
         conn.DeleteLayer(layer)
     except ValueError as e:
         # Mostly the layer could not be found to delete!
-        print('Error while deleting {}: {}'.format(layer, e.message)) 
-    # Close Connection
+        print('Error while deleting {}: {}'.format(layer, e.message))
+        # Close Connection
     conn = None
