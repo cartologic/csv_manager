@@ -141,6 +141,25 @@ def create_wkt_vrt(csv_upload_instance):
     return path
 
 
+def create_from_xy(csv_upload_instance, table_name):
+    # vrt_paht = create_xy_vrt(csv_upload_instance)
+    X_POSSIBLE_NAMES = str(csv_upload_instance.lon_field_name)
+    Y_POSSIBLE_NAMES = str(csv_upload_instance.lat_field_name)
+    srs = str(csv_upload_instance.srs)
+    csv_path = str(csv_upload_instance.csv_file.path)
+
+    # 4. Create Table in Postgres using OGR2OGR
+    out, err = csv_create_postgres_table(
+        csv_path, table_name, srs, X_POSSIBLE_NAMES, Y_POSSIBLE_NAMES)
+    return out, err
+
+
+def create_from_wkt(csv_upload_instance, table_name):
+    vrt_path = create_wkt_vrt(csv_upload_instance)
+    out, err = create_postgres_table(vrt_path, table_name)
+    return out, err
+
+
 def get_rows_count(path):
     with open(path) as f:
         no_of_rows = sum(1 for line in f)
