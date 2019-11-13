@@ -22,6 +22,16 @@ def validate_file_extension(value):
                               .format(','.join(valid_extensions)))
 
 
+def valid_table_column_name(name):
+    from django.core.exceptions import ValidationError
+    pattern = r"^[a-z0-9_]{1,63}$"
+    if not re.search(pattern, name):
+        raise ValidationError(
+            'Invalid table / column name: {}, Must be alphanumeric, Max length: 63 Bytes'
+            .format(name),
+             )
+
+
 class CSVUpload(models.Model):
     user = models.ForeignKey(Profile, blank=True, null=True)
     csv_file_name = models.CharField(max_length=63, blank=True)
