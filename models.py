@@ -23,12 +23,22 @@ def validate_file_extension(value):
                               .format(','.join(valid_extensions)))
 
 
-def valid_table_column_name(name):
+def valid_table__name(name):
     from django.core.exceptions import ValidationError
     pattern = r"^[a-z0-9_]{1,63}$"
     if not re.search(pattern, name):
         raise ValidationError(
             'Invalid table / column name: {}, Must be alphanumeric, Max length: 63 Bytes'
+            .format(name),
+             )
+
+
+def valid_column_name(name):
+    from django.core.exceptions import ValidationError
+    pattern = r"^[A-Za-z0-9_]{1,63}$"
+    if not re.search(pattern, name):
+        raise ValidationError(
+            'Invalid column name: {}, Must be alphanumeric, Max length: 63 Bytes'
             .format(name),
              )
 
@@ -43,9 +53,9 @@ class CSVUpload(models.Model):
         max_length=500)
     uploaded_at = models.DateTimeField(auto_now=False, auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True, auto_now_add=False)
-    lon_field_name = models.CharField(max_length=55, blank=False, validators=[valid_table_column_name])
-    lat_field_name = models.CharField(max_length=55, blank=False, validators=[valid_table_column_name])
-    wkt_field_name = models.CharField(max_length=55, blank=False, validators=[valid_table_column_name])
+    lon_field_name = models.CharField(max_length=55, blank=False, validators=[valid_column_name])
+    lat_field_name = models.CharField(max_length=55, blank=False, validators=[valid_column_name])
+    wkt_field_name = models.CharField(max_length=55, blank=False, validators=[valid_column_name])
     geometry_type = models.CharField(
         max_length=55,
         blank=False,

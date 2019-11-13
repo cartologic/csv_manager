@@ -2,7 +2,7 @@ import re
 
 from django import forms
 
-from .models import CSVUpload, valid_table_column_name
+from .models import CSVUpload, valid_table__name
 
 
 class CSVUploadForm(forms.ModelForm):
@@ -13,7 +13,7 @@ class CSVUploadForm(forms.ModelForm):
 
 class XYPublishForm(forms.ModelForm):
     # Added extra field to accept table name
-    table_name = forms.CharField(max_length=63, validators=[valid_table_column_name])
+    table_name = forms.CharField(max_length=63, validators=[valid_table__name])
 
     class Meta:
         model = CSVUpload
