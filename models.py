@@ -1,4 +1,5 @@
 import os
+import re
 
 from django.db import models
 from geonode.people.models import Profile
@@ -33,8 +34,8 @@ def valid_table_column_name(name):
 
 
 class CSVUpload(models.Model):
-    user = models.ForeignKey(Profile, blank=True, null=True)
-    csv_file_name = models.CharField(max_length=63, blank=True)
+    user = models.ForeignKey(Profile, blank=False, null=True)
+    csv_file_name = models.CharField(max_length=63, blank=False)
     csv_file = models.FileField(
         validators=[validate_file_extension],
         null=False,
@@ -42,17 +43,17 @@ class CSVUpload(models.Model):
         max_length=500)
     uploaded_at = models.DateTimeField(auto_now=False, auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True, auto_now_add=False)
-    lon_field_name = models.CharField(max_length=55, blank=True)
-    lat_field_name = models.CharField(max_length=55, blank=True)
-    wkt_field_name = models.CharField(max_length=55, blank=True)
+    lon_field_name = models.CharField(max_length=55, blank=False, validators=[valid_table_column_name])
+    lat_field_name = models.CharField(max_length=55, blank=False, validators=[valid_table_column_name])
+    wkt_field_name = models.CharField(max_length=55, blank=False, validators=[valid_table_column_name])
     geometry_type = models.CharField(
         max_length=55,
-        blank=True,
+        blank=False,
         choices=GeometryTypeChoices.get_choices(),
     )
-    the_geom_field_name = models.CharField(max_length=55, blank=True)
-    srs = models.CharField(max_length=30, blank=True, default='WGS84')
-    features_count = models.IntegerField(blank=True, default=0)
+    the_geom_field_name = models.CharField(max_length=55, blank=False)
+    srs = models.CharField(max_length=30, blank=False, default='WGS84')
+    features_count = models.IntegerField(blank=False, default=0)
 
     def __str__(self):
         return self.csv_name
