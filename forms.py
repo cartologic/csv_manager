@@ -21,7 +21,7 @@ class XYPublishForm(forms.ModelForm):
 
 
 class WKTPublishForm(forms.ModelForm):
-    table_name = forms.CharField(max_length=63, validators=[valid_table_column_name])
+    table_name = forms.CharField(max_length=63, validators=[valid_table__name])
 
     class Meta:
         model = CSVUpload
