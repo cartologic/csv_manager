@@ -55,13 +55,14 @@ class CSVUpload(models.Model):
     updated_at = models.DateTimeField(auto_now=True, auto_now_add=False)
     lon_field_name = models.CharField(max_length=55, blank=False, validators=[valid_column_name])
     lat_field_name = models.CharField(max_length=55, blank=False, validators=[valid_column_name])
-    wkt_field_name = models.CharField(max_length=55, blank=False, validators=[valid_column_name])
+    wkt_field_name = models.CharField(max_length=55, blank=False, null=True, validators=[valid_column_name])
     geometry_type = models.CharField(
         max_length=55,
         blank=False,
         choices=GeometryTypeChoices.get_choices(),
+        null=True,
     )
-    the_geom_field_name = models.CharField(max_length=55, blank=False)
+    the_geom_field_name = models.CharField(max_length=55, blank=False, null=True,)
     srs = models.CharField(max_length=30, blank=False, default='WGS84')
     features_count = models.IntegerField(blank=False, default=0)
 
