@@ -50,9 +50,10 @@ def upload(request):
             mkdirs(full_path)
             handle_uploaded_file(
                 request.FILES['csv_file'], os.path.join(full_path, csv_name))
+            features_count = get_rows_count(os.path.join(full_path, csv_name))
             CSVUpload.objects.create(csv_file=os.path.join(csv_path, csv_name), user=request.user,
                                      csv_file_name=csv_name,
-                                     features_count=get_rows_count(os.path.join(full_path, csv_name)))
+                                     features_count=features_count)
             json_response = {"status": True, "message": "CSV uploaded successfully",
                              "field_names": get_field_names(os.path.join(full_path, csv_name))}
             return JsonResponse(json_response, status=200)
