@@ -11,7 +11,7 @@ from .models import CSVUpload
 
 def get_field_names(path):
     field_names = []
-    with open(path, "rb") as f:
+    with open(path, 'rU') as f:
         dialect = csv.Sniffer().sniff(f.readline())
         f.seek(0)
         reader = csv.reader(f, dialect)
