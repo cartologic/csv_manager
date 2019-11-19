@@ -11,7 +11,7 @@ const plugins = [
     } ),
     new webpack.SourceMapDevToolPlugin( {
         filename: 'sourcemaps/[file].map',
-        publicPath: '/static/data_manager/dist/',
+        publicPath: '/static/csv_manager/dist/',
         fileContext: 'public'
     } ),
 
@@ -35,7 +35,7 @@ var config = {
         libraryTarget: 'umd',
         umdNamedDefine: true,
         chunkFilename: '[name]-chunk.js',
-        publicPath: "/static/data_manager/dist/"
+        publicPath: "/static/csv_manager/dist/"
     },
     node: {
         fs: "empty"

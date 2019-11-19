@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import MainPage from '../components/MainPage'
-import { getCRSFToken } from '../utils'
+import { getCRSFToken, validateFieldName, validateTableName } from '../utils'
 
 export default class CSVManager extends Component {
     constructor(props) {
@@ -12,6 +12,7 @@ export default class CSVManager extends Component {
                 item: {},
                 error: '',
                 formErrors: undefined,
+                layerURL: undefined,
             },
             loading: false,
             listLoading: false,
@@ -20,7 +21,8 @@ export default class CSVManager extends Component {
         // globalURLS are predefined in index.html otherwise use the following defaults
         this.urls = globalURLS
         this.onDrop = this.onDrop.bind(this)
-        this.validateFormData = this.validateFormData.bind(this)
+        this.validateXYFormData = this.validateXYFormData.bind(this)
+        this.validateWKTFormData = this.validateWKTFormData.bind(this)
         this.fetchListOfCsvFiles = this.fetchListOfCsvFiles.bind(this)
         this.handlePublishDialogClose = this.handlePublishDialogClose.bind(this)
         this.handlePublishDialogOpen = this.handlePublishDialogOpen.bind(this)
@@ -55,14 +57,7 @@ export default class CSVManager extends Component {
             }
         )
     }
-    validateFormData(item){
-        let validateFieldName = (fieldName) => {
-            return fieldName && fieldName.length > 0
-        }
-        let validateTableName = (tableName) => {
-            let re = /^[a-z0-9_]{1,63}$/
-            return tableName && re.test(tableName)
-        }
+    validateXYFormData(item) {
         let formErrors = undefined
         if (!validateTableName(item.table_name)) {
             formErrors = {
@@ -70,13 +65,13 @@ export default class CSVManager extends Component {
                 table_name: true
             }
         }
-        if(!validateFieldName(item.lat_field_name)) {
+        if (!validateFieldName(item.lat_field_name)) {
             formErrors = {
                 ...formErrors,
                 lat_field_name: true
             }
         }
-        if(!validateFieldName(item.lon_field_name)) {
+        if (!validateFieldName(item.lon_field_name)) {
             formErrors = {
                 ...formErrors,
                 lon_field_name: true
@@ -84,60 +79,112 @@ export default class CSVManager extends Component {
         }
         return formErrors
     }
-    handlePublishDialogPublish() {
+    validateWKTFormData(item) {
+        let formErrors = undefined
+        if (!validateTableName(item.table_name)) {
+            formErrors = {
+                ...formErrors,
+                table_name: true
+            }
+        }
+        if (!validateFieldName(item.wkt_field_name)) {
+            formErrors = {
+                ...formErrors,
+                wkt_field_name: true
+            }
+        }
+        if (!validateFieldName(item.geometry_type)) {
+            formErrors = {
+                ...formErrors,
+                geometry_type: true
+            }
+        }
+        return formErrors
+    }
+    handlePublishDialogPublish(wkt = false) {
         let item = this.state.publishDialogData.item;
-        let formErrors = this.validateFormData(item)
+        let formErrors = wkt ? this.validateWKTFormData(item) : this.validateXYFormData(item)
+        const submitXYForm = item => {
+            let form = new FormData();
+            form.append('id', item.id)
+            form.append('lat_field_name', item.lat_field_name)
+            form.append('lon_field_name', item.lon_field_name)
+            form.append('srs', item.srs)
+            form.append('table_name', item.table_name || '')
+
+            form.append('wkt_field_name', '')
+            form.append('geometry_type', 'POINTXY')
+
+            form.append('csrfmiddlewaretoken', getCRSFToken())
+            return fetch(this.urls.publishCSV, {
+                method: 'POST',
+                body: form,
+                credentials: 'same-origin',
+            })
+        }
+        const submitWKTForm = item => {
+            let form = new FormData();
+            form.append('id', item.id)
+            form.append('lat_field_name', '')
+            form.append('lon_field_name', '')
+            form.append('srs', item.srs)
+            form.append('table_name', item.table_name || '')
+
+            form.append('wkt', true)
+            form.append('wkt_field_name', item.wkt_field_name)
+            form.append('geometry_type', item.geometry_type)
+
+            form.append('csrfmiddlewaretoken', getCRSFToken())
+            return fetch(this.urls.publishCSV, {
+                method: 'POST',
+                body: form,
+                credentials: 'same-origin',
+            })
+        }
         this.setState({
             loading: true,
         }, () => {
             if (!formErrors) {
-                let form = new FormData();
-                form.append('id', item.id)
-                form.append('lat_field_name', item.lat_field_name)
-                form.append('lon_field_name', item.lon_field_name)
-                form.append('srs', item.srs)
-                form.append('table_name', item.table_name)
-                form.append('csrfmiddlewaretoken', getCRSFToken())
-                fetch(this.urls.publishCSV, {
-                    method: 'POST',
-                    body: form,
-                    credentials: 'same-origin',
-                })
-                    .then(response => {
-                        if (response.status === 500) {
-                            response.json()
-                                .then((error) => {
+                const submitFunction = wkt ? submitWKTForm : submitXYForm
+                submitFunction(item)
+                .then(response => {
+                    if (response.status === 400) {
+                        response.json()
+                            .then((error) => {
+                                this.setState({
+                                    publishDialogData: {
+                                        ...this.state.publishDialogData,
+                                        error: error.message,
+                                        formErrors: undefined,
+                                        layerURL: undefined,
+                                    },
+                                    loading: false
+                                })
+                            })
+                    } else {
+                        response.json()
+                            .then(response => {
+                                if (response.status) {
                                     this.setState({
                                         publishDialogData: {
                                             ...this.state.publishDialogData,
-                                            error: error.message,
+                                            error: '',
                                             formErrors: undefined,
+                                            layerURL: globalURLS.layerDetail(response.layer_name)
                                         },
                                         loading: false
-                                    })
-                                })
-                        } else {
-                            response.json()
-                                .then(response => {
-                                    if (response.status) {
-                                        this.setState({
-                                            publishDialogData: {
-                                                ...this.state.publishDialogData,
-                                                error: '',
-                                                formErrors: undefined,
-                                            },
-                                            loading: false
-                                        }, () => { this.fetchListOfCsvFiles() })
-                                    }
-                                })
-                        }
-                    })
+                                    }, () => { this.fetchListOfCsvFiles() })
+                                }
+                            })
+                    }
+                })
 
             } else {
                 this.setState({
                     publishDialogData: {
                         ...this.state.publishDialogData,
                         formErrors: formErrors,
+                        layerURL: undefined,
                     },
                     loading: false,
                 })
@@ -152,6 +199,7 @@ export default class CSVManager extends Component {
                 ...this.state.publishDialogData,
                 error: '',
                 formErrors: undefined,
+                layerURL: undefined,
             }
         })
     }
@@ -194,9 +242,9 @@ export default class CSVManager extends Component {
                 uploadLoading: true,
             }, () => {
                 let file = new File(
-                    [accepted[i]], 
-                    removeSpecialCharacters(accepted[i].name).toLowerCase(), 
-                    {type: accepted[i].type,},
+                    [accepted[i]],
+                    removeSpecialCharacters(accepted[i].name).toLowerCase(),
+                    { type: accepted[i].type, },
                     accepted[i].preview
                 );
                 let formData = new FormData();

@@ -9,6 +9,9 @@ from geonode.geoserver.helpers import ogc_server_settings
 
 from .models import CSVUpload
 from .publishers import GeoserverPublisher, GeonodePublisher
+from .constants import GeometryTypeChoices
+
+from osgeo import ogr
 
 
 def execute(cmd):
@@ -39,6 +42,23 @@ def create_postgres_table(vrt_path, table_name):
         db_settings['user'],
         db_settings['password'],
         vrt_path
+    )
+    return execute(cmd)
+
+
+def csv_create_postgres_table(csv_path, table_name, srs, X_POSSIBLE_NAMES, Y_POSSIBLE_NAMES):
+    db_settings = get_db_settings()
+    cmd = '''ogr2ogr -nln {} -f PostgreSQL PG:"dbname='{}' host='{}' port='{}'  user='{}' password='{}'" -oo AUTODETECT_TYPE=YES -oo X_POSSIBLE_NAMES={} -oo Y_POSSIBLE_NAMES={} -a_srs {} {}'''.format(
+        table_name,
+        db_settings['db_name'],
+        db_settings['host'],
+        db_settings['port'],
+        db_settings['user'],
+        db_settings['password'],
+        X_POSSIBLE_NAMES,
+        Y_POSSIBLE_NAMES,
+        srs,
+        csv_path,
     )
     return execute(cmd)
 
@@ -93,6 +113,53 @@ def create_xy_vrt(csv_upload_instance):
     return path
 
 
+def create_wkt_vrt(csv_upload_instance):
+    # csv layer name is the csv file name without extension
+    csv_layer_name = os.path.splitext(csv_upload_instance.csv_name)[0]
+    csv_dir_path = os.path.dirname(csv_upload_instance.csv_file.path)
+    vrt_template = '''<OGRVRTDataSource>
+    <OGRVRTLayer name="{}">
+        <SrcDataSource>{}</SrcDataSource>
+        <GeometryType>{}</GeometryType>
+        <LayerSRS>{}</LayerSRS>
+        <GeometryField encoding="WKT" field="{}"/>
+    </OGRVRTLayer>
+</OGRVRTDataSource>
+'''.format(
+        csv_layer_name,
+        csv_upload_instance.csv_file.path,
+        GeometryTypeChoices[csv_upload_instance.geometry_type].value,
+        csv_upload_instance.srs,
+        csv_upload_instance.wkt_field_name,
+    )
+    path = os.path.join(settings.MEDIA_ROOT, csv_dir_path, '{}.vrt'.format(csv_layer_name))
+    # remove file if exists and create another
+    if os.path.exists(path):
+        os.remove(path)
+    with open(path, 'wb') as v:
+        v.write(vrt_template)
+    return path
+
+
+def create_from_xy(csv_upload_instance, table_name):
+    # vrt_paht = create_xy_vrt(csv_upload_instance)
+    X_POSSIBLE_NAMES = str(csv_upload_instance.lon_field_name)
+    Y_POSSIBLE_NAMES = str(csv_upload_instance.lat_field_name)
+    srs = str(csv_upload_instance.srs)
+    csv_path = str(csv_upload_instance.csv_file.path)
+
+    # 4. Create Table in Postgres using OGR2OGR
+    out, err = csv_create_postgres_table(
+        csv_path, table_name, srs, X_POSSIBLE_NAMES, Y_POSSIBLE_NAMES)
+    return out, err
+
+
+def create_from_wkt(csv_upload_instance, table_name):
+    vrt_path = create_wkt_vrt(csv_upload_instance)
+    out, err = create_postgres_table(vrt_path, table_name)
+    return out, err
+
+
 def get_rows_count(path):
     with open(path) as f:
         no_of_rows = sum(1 for line in f)
@@ -117,7 +184,12 @@ def publish_in_geoserver(table_name):
 
 def publish_in_geonode(table_name, owner):
     gn_publisher = GeonodePublisher(owner=owner)
-    gn_publisher.publish(table_name)
+    return gn_publisher.publish(table_name)
+
+
+def cascade_delete_layer(layer_name):
+    gs_publisher = GeoserverPublisher()
+    return gs_publisher.delete_layer(layer_name)
 
 
 def delete_csv(request):
@@ -125,3 +197,15 @@ def delete_csv(request):
     csv_instance.delete()
     json_response = {"status": True, "message": "CSV Deleted successfully", }
     return JsonResponse(json_response, status=200)
+
+
+def delete_layer(connection_string, layer, ):
+    ''' Deletes a layer in postgreSQL database'''
+    conn = ogr.Open(connection_string)
+    try:
+        conn.DeleteLayer(layer)
+    except ValueError as e:
+        # Mostly the layer could not be found to delete!
+        print('Error while deleting {}: {}'.format(layer, e.message))
+        # Close Connection
+    conn = None

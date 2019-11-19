@@ -11,8 +11,8 @@ from .models import CSVUpload
 
 def get_field_names(path):
     field_names = []
-    with open(path, "rb") as f:
-        dialect = csv.Sniffer().sniff(f.read(), delimiters=';,')
+    with open(path, 'rU') as f:
+        dialect = csv.Sniffer().sniff(f.readline())
         f.seek(0)
         reader = csv.reader(f, dialect)
         i = reader.next()
@@ -33,7 +33,8 @@ class CSVUploadResource(ModelResource):
             "id": ALL,
             "uploaded_at": ALL,
             "updated_at": ALL,
-            "user": ALL_WITH_RELATIONS
+            "user": ALL_WITH_RELATIONS,
+            'geometry_type': ALL,
         }
         excludes = ['csv_file', ]
 

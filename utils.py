@@ -137,3 +137,23 @@ def get_geom_attr(typename):
     if len(geom_attrs) == 0:
         return None
     return str(geom_attrs[0].get('name'))
+
+
+def get_db_settings():
+    settings = ogc_server_settings.datastore_db
+    return {
+        'db_name': settings.get('NAME'),
+        'user': settings.get('USER'),
+        'password': settings.get('PASSWORD'),
+        'host': settings.get('HOST', 'localhost'),
+        'port': settings.get('PORT', 5432),
+    }
+
+def create_connection_string():
+    settings = get_db_settings()
+    databaseServer = settings['host']
+    databaseName = settings['db_name']
+    databaseUser = settings['user']
+    databasePW = settings['password']
+    databasePort = settings['port']
+    return "PG: host=%s port=%s dbname=%s user=%s password=%s" % (databaseServer, databasePort, databaseName,databaseUser, databasePW)
