@@ -22,6 +22,7 @@ from .logic import (
     delete_layer,
     create_from_xy,
     create_from_wkt,
+    cascade_delete_layer
 )
 from .models import CSVUpload
 from .utils import create_connection_string
@@ -107,9 +108,10 @@ def publish(request):
             # 5. GeoServer Publish
             try:
                 publish_in_geoserver(table_name)
-            except:
+            except Exception as e:
                 # Roll back and delete the created table in database
                 delete_layer(connection_string, str(table_name))
+                cascade_delete_layer(str(table_name))
                 json_response = {
                     "status": False, "message": "Could not publish to GeoServer", 'warnings': warnings}
                 return JsonResponse(json_response, status=400)
@@ -117,10 +119,11 @@ def publish(request):
             # 6. GeoNode Publish
             try:
                 layer = publish_in_geonode(table_name, owner=request.user)
-            except:
+            except Exception as e:
                 # Roll back and delete the created table in database
                 # TODO: delete layer from geoserver and geonode if exist
                 delete_layer(connection_string, str(table_name))
+                cascade_delete_layer(str(table_name))
                 json_response = {
                     "status": False, "message": "Could not publish in GeoNode", 'warnings': warnings}
                 return JsonResponse(json_response, status=400)
