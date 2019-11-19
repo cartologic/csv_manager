@@ -1,17 +1,17 @@
 import csv
+import io
 import os
 import subprocess
+from osgeo import ogr
 
 from django.conf import settings
 from django.db import connections
 from django.http import JsonResponse
 from geonode.geoserver.helpers import ogc_server_settings
 
+from .constants import GeometryTypeChoices
 from .models import CSVUpload
 from .publishers import GeoserverPublisher, GeonodePublisher
-from .constants import GeometryTypeChoices
-
-from osgeo import ogr
 
 
 def execute(cmd):
@@ -78,10 +78,15 @@ def mkdirs(path):
 
 def get_field_names(path):
     field_names = []
-    with open(path, "rb") as f:
-        reader = csv.reader(f)
-        i = reader.next()
-        field_names.append(i)
+    try:
+        with io.open(path, newline='') as f:
+            dialect = csv.Sniffer().sniff(f.readline())
+            f.seek(0)
+            reader = csv.reader(f, dialect)
+            i = reader.next()
+            field_names.append(i)
+    except Exception as e:
+        print('Error while reading csv: {}'.format(e))
     return field_names
 
 
