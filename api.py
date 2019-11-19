@@ -1,4 +1,5 @@
 import csv
+import io
 import os
 
 from django.conf import settings
@@ -11,7 +12,7 @@ from .models import CSVUpload
 
 def get_field_names(path):
     field_names = []
-    with open(path, 'rU') as f:
+    with io.open(path, newline='') as f:
         dialect = csv.Sniffer().sniff(f.readline())
         f.seek(0)
         reader = csv.reader(f, dialect)
