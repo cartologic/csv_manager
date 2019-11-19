@@ -87,7 +87,7 @@ const WKTSelect = props => {
       <FormControl className={classes.formControl} error={formErrors && formErrors.wkt_field_name || false}>
         <InputLabel htmlFor="lon-helper">{'Geometry Column'}</InputLabel>
         <Select
-          value={values.wkt_field_name}
+          value={values.wkt_field_name || ''}
           onChange={handleSelectChange}
           input={<Input name="wkt_field_name" id="lon-helper" />}
         >
@@ -104,7 +104,7 @@ const WKTSelect = props => {
       <FormControl className={classes.formControl} error={formErrors && formErrors.geometry_type || false}>
         <InputLabel htmlFor="lat-helper">{'Geom Type'}</InputLabel>
         <Select
-          value={values.geometry_type}
+          value={values.geometry_type || ''}
           onChange={handleSelectChange}
           input={<Input name="geometry_type" id="lat-helper" />}
         >
