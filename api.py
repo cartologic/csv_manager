@@ -1,5 +1,3 @@
-import csv
-import io
 import os
 
 from django.conf import settings
@@ -7,18 +5,8 @@ from tastypie.constants import ALL, ALL_WITH_RELATIONS
 from tastypie.fields import ListField
 from tastypie.resources import ModelResource
 
+from .logic import get_field_names
 from .models import CSVUpload
-
-
-def get_field_names(path):
-    field_names = []
-    with io.open(path, newline='') as f:
-        dialect = csv.Sniffer().sniff(f.readline())
-        f.seek(0)
-        reader = csv.reader(f, dialect)
-        i = reader.next()
-        field_names.append(i)
-    return field_names
 
 
 class CSVUploadResource(ModelResource):
