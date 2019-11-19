@@ -144,7 +144,7 @@ export default class CSVManager extends Component {
         this.setState({
             loading: true,
         }, () => {
-            if (true) {
+            if (!formErrors) {
                 const submitFunction = wkt ? submitWKTForm : submitXYForm
                 submitFunction(item)
                 .then(response => {
