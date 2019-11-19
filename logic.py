@@ -187,6 +187,11 @@ def publish_in_geonode(table_name, owner):
     return gn_publisher.publish(table_name)
 
 
+def cascade_delete_layer(layer_name):
+    gs_publisher = GeoserverPublisher()
+    return gs_publisher.delete_layer(layer_name)
+
+
 def delete_csv(request):
     csv_instance = CSVUpload.objects.get(pk=request.POST['id'])
     csv_instance.delete()
