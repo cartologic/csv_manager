@@ -70,7 +70,7 @@ const PublishDialogData = (props) => {
     setWKT(wkt)
   }
   useEffect(()=>{
-    if(item.geometry_type === '') setWKT('POINTXY')
+    if(!item.geometry_type) setWKT('POINTXY')
     else setWKT(item.geometry_type)
   }, [item.geometry_type])
   const classes = useStyles()
