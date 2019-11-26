@@ -21,7 +21,8 @@ from .logic import (
     table_exist,
     delete_layer,
     create_from_xy,
-    create_from_wkt,
+    create_from_wkt_vrt,
+    create_from_wkt_csv,
     cascade_delete_layer
 )
 from .models import CSVUpload
@@ -86,7 +87,7 @@ def publish(request):
                 return JsonResponse(json_response, status=400)
 
             if wkt:
-                out, err = create_from_wkt(csv_upload_instance, table_name)
+                out, err = create_from_wkt_csv(csv_upload_instance, table_name)
             else:
                 out, err = create_from_xy(csv_upload_instance, table_name)
 
