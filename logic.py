@@ -63,6 +63,23 @@ def csv_create_postgres_table(csv_path, table_name, srs, X_POSSIBLE_NAMES, Y_POS
     return execute(cmd)
 
 
+def wkt_csv_create_postgres_table(csv_path, table_name, srs, geom_possible_names, geom_type):
+    db_settings = get_db_settings()
+    cmd = '''ogr2ogr -nln {} -f PostgreSQL PG:"dbname='{}' host='{}' port='{}'  user='{}' password='{}'" -lco GEOM_TYPE="geometry" -oo AUTODETECT_TYPE=YES -oo GEOM_POSSIBLE_NAMES={} -nlt {} -oo KEEP_GEOM_COLUMNS=NO -a_srs {} {}'''.format(
+        table_name,
+        db_settings['db_name'],
+        db_settings['host'],
+        db_settings['port'],
+        db_settings['user'],
+        db_settings['password'],
+        geom_possible_names,
+        geom_type,  # one of POINT MULTIPOINT POLYGON MULTIPOLYGON LINESTRING MULTILINESTRING
+        srs,
+        csv_path,
+    )
+    return execute(cmd)
+
+
 def handle_uploaded_file(f, path):
     with open(path, 'wb+') as destination:
         for chunk in f.chunks():
