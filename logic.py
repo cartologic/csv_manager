@@ -46,7 +46,7 @@ def create_postgres_table(vrt_path, table_name):
     return execute(cmd)
 
 
-def csv_create_postgres_table(csv_path, table_name, srs, X_POSSIBLE_NAMES, Y_POSSIBLE_NAMES):
+def xy_csv_create_postgres_table(csv_path, table_name, srs, X_POSSIBLE_NAMES, Y_POSSIBLE_NAMES):
     db_settings = get_db_settings()
     cmd = '''ogr2ogr -nln {} -f PostgreSQL PG:"dbname='{}' host='{}' port='{}'  user='{}' password='{}'" -oo AUTODETECT_TYPE=YES -oo X_POSSIBLE_NAMES={} -oo Y_POSSIBLE_NAMES={} -a_srs {} {}'''.format(
         table_name,
@@ -171,12 +171,21 @@ def create_from_xy(csv_upload_instance, table_name):
     csv_path = str(csv_upload_instance.csv_file.path)
 
     # 4. Create Table in Postgres using OGR2OGR
-    out, err = csv_create_postgres_table(
+    out, err = xy_csv_create_postgres_table(
         csv_path, table_name, srs, X_POSSIBLE_NAMES, Y_POSSIBLE_NAMES)
     return out, err
 
 
-def create_from_wkt(csv_upload_instance, table_name):
+def create_from_wkt_csv(csv_upload_instance, table_name):
+    geom_type = str(csv_upload_instance.geometry_type)
+    geom_possible_names = str(csv_upload_instance.wkt_field_name)
+    srs = str(csv_upload_instance.srs)
+    csv_path = str(csv_upload_instance.csv_file.path)
+    out, err = wkt_csv_create_postgres_table(csv_path, table_name, srs, geom_possible_names, geom_type)
+    return out, err
+
+
+def create_from_wkt_vrt(csv_upload_instance, table_name):
     vrt_path = create_wkt_vrt(csv_upload_instance)
     out, err = create_postgres_table(vrt_path, table_name)
     return out, err
