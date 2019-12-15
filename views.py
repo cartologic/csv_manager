@@ -110,17 +110,18 @@ def publish(request):
             # 4. GeoServer Publish
             gs_response = publish_in_geoserver(table_name)
             if gs_response.status_code != 201:
-                # cascade delete is a method deletes layer from geoserver and database
-                # delete from geoserver hence the layer has no table already!
                 if gs_response.status_code == 500:
-                    # layer exist in geoserver and not in database, hence checked in db in step 2
+                    # status code 500:
+                    # layer exist in geoserver datastore and does not exist in database
+                    # hence the database check is done in step 2
+                    # cascade delete is a method deletes layer from geoserver and database
                     cascade_delete_layer(str(table_name))
-                else:
-                    delete_layer(connection_string, str(table_name))
-                    json_response = {
-                        "status": False, "message": "Could not publish to GeoServer, Error Response Code:{}".format(
-                            gs_response.status_code), 'warnings': warnings}
-                    return JsonResponse(json_response, status=400)
+                # delete layer from database as well
+                delete_layer(connection_string, str(table_name))
+                json_response = {
+                    "status": False, "message": "Could not publish to GeoServer, Error Response Code:{}".format(
+                        gs_response.status_code), 'warnings': warnings}
+                return JsonResponse(json_response, status=400)
 
             # 5. GeoNode Publish
             try:
