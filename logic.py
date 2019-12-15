@@ -7,7 +7,10 @@ from osgeo import ogr
 from django.conf import settings
 from django.db import connections
 from django.http import JsonResponse
+from geonode.geoserver.helpers import gs_catalog
 from geonode.geoserver.helpers import ogc_server_settings
+from geonode.layers.models import Layer
+from django.core.exceptions import ObjectDoesNotExist
 
 from .constants import GeometryTypeChoices
 from .models import CSVUpload
@@ -204,8 +207,23 @@ def table_exist(name):
         if c.alias == data_db_name:
             connection = c
     table_names = connection.introspection.table_names()
-    exist = name in table_names
-    return exist
+    db_exist = name in table_names
+    gs_exist = bool(gs_catalog.get_layer(name))
+    try:
+        Layer.objects.get(name=name)
+        gn_exist = True
+    except ObjectDoesNotExist:
+        gn_exist = False
+    layer_exist = db_exist or gs_exist or gn_exist
+    if layer_exist:
+        # TODO: using logger instead
+        print('Table name \'{}\' is already exist in {}, {}, {}'.format(
+            name,
+            'database' if db_exist else '',
+            'geoserver' if gs_exist else '',
+            'geonode' if gn_exist else '',
+        ))
+    return layer_exist
 
 
 def publish_in_geoserver(table_name):
