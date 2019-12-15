@@ -85,8 +85,9 @@ def _django_connection():
 
 def requests_retry_session(retries=3,
                            backoff_factor=0.3,
-                           status_forcelist=(500, 502, 504),
-                           session=None):
+                           status_forcelist=(500, 502, 503, 504),
+                           session=None,
+                           raise_on_status=True):
     session = session or requests.Session()
     retry = Retry(
         total=retries,
@@ -94,7 +95,8 @@ def requests_retry_session(retries=3,
         connect=retries,
         backoff_factor=backoff_factor,
         status_forcelist=status_forcelist,
-        method_whitelist=frozenset(['GET', 'POST', 'PUT', 'DELETE', 'HEAD']))
+        method_whitelist=frozenset(['GET', 'POST', 'PUT', 'DELETE', 'HEAD']),
+        raise_on_status=raise_on_status)
     adapter = HTTPAdapter(max_retries=retry)
     session.mount('http://', adapter)
     session.mount('https://', adapter)
@@ -149,6 +151,7 @@ def get_db_settings():
         'port': settings.get('PORT', 5432),
     }
 
+
 def create_connection_string():
     settings = get_db_settings()
     databaseServer = settings['host']
@@ -156,4 +159,5 @@ def create_connection_string():
     databaseUser = settings['user']
     databasePW = settings['password']
     databasePort = settings['port']
-    return "PG: host=%s port=%s dbname=%s user=%s password=%s" % (databaseServer, databasePort, databaseName,databaseUser, databasePW)
+    return "PG: host=%s port=%s dbname=%s user=%s password=%s" % (
+    databaseServer, databasePort, databaseName, databaseUser, databasePW)
