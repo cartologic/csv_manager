@@ -21,7 +21,6 @@ from .logic import (
     table_exist,
     delete_layer,
     create_from_xy,
-    create_from_wkt_vrt,
     create_from_wkt_csv,
     cascade_delete_layer
 )
@@ -107,24 +106,30 @@ def publish(request):
                 warnings = err
 
             # 5. GeoServer Publish
-            try:
-                publish_in_geoserver(table_name)
-            except Exception as e:
-                # Roll back and delete the created table in database
-                delete_layer(connection_string, str(table_name))
-                # cascade_delete_layer(str(table_name))
-                json_response = {
-                    "status": False, "message": "Could not publish to GeoServer", 'warnings': warnings}
-                return JsonResponse(json_response, status=400)
+            gs_response = publish_in_geoserver(table_name)
+            if gs_response.status_code != 201:
+                # cascade delete is a method deletes layer from geoserver and database
+                # delete from geoserver hence the layer has no table already!
+                if gs_response.status_code == 500:
+                    # layer exist in geoserver and not in database, hence checked in db in step 2
+                    cascade_delete_layer(str(table_name))
+                else:
+                    delete_layer(connection_string, str(table_name))
+                    json_response = {
+                        "status": False, "message": "Could not publish to GeoServer, Error Response Code:{}".format(
+                            gs_response.status_code), 'warnings': warnings}
+                    return JsonResponse(json_response, status=400)
 
             # 6. GeoNode Publish
             try:
                 layer = publish_in_geonode(table_name, owner=request.user)
             except Exception as e:
+                # no need to delete from geoserver
+                # hence publish_in_geonode method uses objects.get_or_create method
                 # Roll back and delete the created table in database
-                # TODO: delete layer from geoserver and geonode if exist
                 delete_layer(connection_string, str(table_name))
-                # cascade_delete_layer(str(table_name))
+                cascade_delete_layer(str(table_name))
+                print('Error while publishing {} in geonode: {}'.format(table_name, e.message))
                 json_response = {
                     "status": False, "message": "Could not publish in GeoNode", 'warnings': warnings}
                 return JsonResponse(json_response, status=400)
