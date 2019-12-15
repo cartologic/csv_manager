@@ -210,7 +210,7 @@ def table_exist(name):
 
 def publish_in_geoserver(table_name):
     gs_publisher = GeoserverPublisher()
-    gs_publisher.publish_postgis_layer(table_name, table_name)
+    return gs_publisher.publish_postgis_layer(table_name, table_name)
 
 
 def publish_in_geonode(table_name, owner):
