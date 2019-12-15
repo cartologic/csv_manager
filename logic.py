@@ -231,7 +231,9 @@ def delete_csv(request):
 
 
 def delete_layer(connection_string, layer, ):
-    ''' Deletes a layer in postgreSQL database'''
+    """ Deletes a layer in postgreSQL database"""
+    # TODO: using logger instead of print
+    print('Deleting Layer \'{}\' from database'.format(layer))
     conn = ogr.Open(connection_string)
     try:
         conn.DeleteLayer(layer)
