@@ -243,7 +243,12 @@ class GeonodePublisher(object):
             exception_type, error, traceback = sys.exc_info()
         else:
             if layer:
-                #layer.set_default_permissions()
-                perms = {u'users': {u'AnonymousUser': [], self.owner: [u'view_resourcebase', u'download_resourcebase', u'change_resourcebase_metadata', u'change_layer_data', u'change_layer_style', u'change_resourcebase', u'delete_resourcebase', u'change_resourcebase_permissions', u'publish_resourcebase']}, u'groups': {}}
+                # layer.set_default_permissions()
+                perms = {u'users': {u'AnonymousUser': [], self.owner: [u'view_resourcebase', u'download_resourcebase',
+                                                                       u'change_resourcebase_metadata',
+                                                                       u'change_layer_data', u'change_layer_style',
+                                                                       u'change_resourcebase', u'delete_resourcebase',
+                                                                       u'change_resourcebase_permissions',
+                                                                       u'publish_resourcebase']}, u'groups': {}}
                 layer.set_permissions(perms)
             return layer
