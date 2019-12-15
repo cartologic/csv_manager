@@ -46,6 +46,11 @@ export default class CSVManager extends Component {
                     credentials: 'same-origin',
                 })
                     .then((response) => {
+                        if(response.redirected){
+                            const regex = new RegExp('/account/login')
+                            if(regex.test(response.url)) window.location = this.urls.baseURL + 'account/login/?next=' + this.urls.baseURL
+                            else window.location = response.url
+                        }
                         if (response.status === 200) {
                             response.json()
                                 .then((data) => {
@@ -148,6 +153,11 @@ export default class CSVManager extends Component {
                 const submitFunction = wkt ? submitWKTForm : submitXYForm
                 submitFunction(item)
                 .then(response => {
+                    if(response.redirected){
+                        const regex = new RegExp('/account/login')
+                        if(regex.test(response.url)) window.location = this.urls.baseURL + 'account/login/?next=' + this.urls.baseURL
+                        else window.location = response.url
+                    }
                     if (response.status === 400) {
                         response.json()
                             .then((error) => {

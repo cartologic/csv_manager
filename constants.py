@@ -4,10 +4,10 @@ from enum import Enum
 class GeometryTypeChoices(Enum):
     UNKNOWN = 'wkbUnknown'
     POINT = 'wkbPoint'
-    LINE = 'wkbLineString'
+    LINESTRING = 'wkbLineString'
     POLYGON = 'wkbPolygon'
     MULTIPOINT = 'wkbMultiPoint'
-    MULTILINE = 'wkbMultiLineString'
+    MULTILINESTRING = 'wkbMultiLineString'
     MULTIPOLYGON = 'wkbMultiPolygon'
     POINTXY = 'AS_XY'
     POINTYX = 'AS_YX'

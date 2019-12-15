@@ -1,17 +1,20 @@
 import csv
+import io
 import os
 import subprocess
+from osgeo import ogr
 
 from django.conf import settings
 from django.db import connections
 from django.http import JsonResponse
+from geonode.geoserver.helpers import gs_catalog
 from geonode.geoserver.helpers import ogc_server_settings
+from geonode.layers.models import Layer
+from django.core.exceptions import ObjectDoesNotExist
 
+from .constants import GeometryTypeChoices
 from .models import CSVUpload
 from .publishers import GeoserverPublisher, GeonodePublisher
-from .constants import GeometryTypeChoices
-
-from osgeo import ogr
 
 
 def execute(cmd):
@@ -46,7 +49,7 @@ def create_postgres_table(vrt_path, table_name):
     return execute(cmd)
 
 
-def csv_create_postgres_table(csv_path, table_name, srs, X_POSSIBLE_NAMES, Y_POSSIBLE_NAMES):
+def xy_csv_create_postgres_table(csv_path, table_name, srs, X_POSSIBLE_NAMES, Y_POSSIBLE_NAMES):
     db_settings = get_db_settings()
     cmd = '''ogr2ogr -nln {} -f PostgreSQL PG:"dbname='{}' host='{}' port='{}'  user='{}' password='{}'" -oo AUTODETECT_TYPE=YES -oo X_POSSIBLE_NAMES={} -oo Y_POSSIBLE_NAMES={} -a_srs {} {}'''.format(
         table_name,
@@ -57,6 +60,23 @@ def csv_create_postgres_table(csv_path, table_name, srs, X_POSSIBLE_NAMES, Y_POS
         db_settings['password'],
         X_POSSIBLE_NAMES,
         Y_POSSIBLE_NAMES,
+        srs,
+        csv_path,
+    )
+    return execute(cmd)
+
+
+def wkt_csv_create_postgres_table(csv_path, table_name, srs, geom_possible_names, geom_type):
+    db_settings = get_db_settings()
+    cmd = '''ogr2ogr -nln {} -f PostgreSQL PG:"dbname='{}' host='{}' port='{}'  user='{}' password='{}'" -lco GEOM_TYPE="geometry" -oo AUTODETECT_TYPE=YES -oo GEOM_POSSIBLE_NAMES={} -nlt {} -oo KEEP_GEOM_COLUMNS=NO -a_srs {} {}'''.format(
+        table_name,
+        db_settings['db_name'],
+        db_settings['host'],
+        db_settings['port'],
+        db_settings['user'],
+        db_settings['password'],
+        geom_possible_names,
+        geom_type,  # one of POINT MULTIPOINT POLYGON MULTIPOLYGON LINESTRING MULTILINESTRING
         srs,
         csv_path,
     )
@@ -78,10 +98,15 @@ def mkdirs(path):
 
 def get_field_names(path):
     field_names = []
-    with open(path, "rb") as f:
-        reader = csv.reader(f)
-        i = reader.next()
-        field_names.append(i)
+    try:
+        with io.open(path, newline='') as f:
+            dialect = csv.Sniffer().sniff(f.readline())
+            f.seek(0)
+            reader = csv.reader(f, dialect)
+            i = reader.next()
+            field_names.append(i)
+    except Exception as e:
+        print('Error while reading csv: {}'.format(e))
     return field_names
 
 
@@ -149,12 +174,21 @@ def create_from_xy(csv_upload_instance, table_name):
     csv_path = str(csv_upload_instance.csv_file.path)
 
     # 4. Create Table in Postgres using OGR2OGR
-    out, err = csv_create_postgres_table(
+    out, err = xy_csv_create_postgres_table(
         csv_path, table_name, srs, X_POSSIBLE_NAMES, Y_POSSIBLE_NAMES)
     return out, err
 
 
-def create_from_wkt(csv_upload_instance, table_name):
+def create_from_wkt_csv(csv_upload_instance, table_name):
+    geom_type = str(csv_upload_instance.geometry_type)
+    geom_possible_names = str(csv_upload_instance.wkt_field_name)
+    srs = str(csv_upload_instance.srs)
+    csv_path = str(csv_upload_instance.csv_file.path)
+    out, err = wkt_csv_create_postgres_table(csv_path, table_name, srs, geom_possible_names, geom_type)
+    return out, err
+
+
+def create_from_wkt_vrt(csv_upload_instance, table_name):
     vrt_path = create_wkt_vrt(csv_upload_instance)
     out, err = create_postgres_table(vrt_path, table_name)
     return out, err
@@ -173,13 +207,28 @@ def table_exist(name):
         if c.alias == data_db_name:
             connection = c
     table_names = connection.introspection.table_names()
-    exist = name in table_names
-    return exist
+    db_exist = name in table_names
+    gs_exist = bool(gs_catalog.get_layer(name))
+    try:
+        Layer.objects.get(name=name)
+        gn_exist = True
+    except ObjectDoesNotExist:
+        gn_exist = False
+    layer_exist = db_exist or gs_exist or gn_exist
+    if layer_exist:
+        # TODO: using logger instead
+        print('Table name \'{}\' is already exist in {}, {}, {}'.format(
+            name,
+            'database' if db_exist else '',
+            'geoserver' if gs_exist else '',
+            'geonode' if gn_exist else '',
+        ))
+    return layer_exist
 
 
 def publish_in_geoserver(table_name):
     gs_publisher = GeoserverPublisher()
-    gs_publisher.publish_postgis_layer(table_name, table_name)
+    return gs_publisher.publish_postgis_layer(table_name, table_name)
 
 
 def publish_in_geonode(table_name, owner):
@@ -200,7 +249,9 @@ def delete_csv(request):
 
 
 def delete_layer(connection_string, layer, ):
-    ''' Deletes a layer in postgreSQL database'''
+    """ Deletes a layer in postgreSQL database"""
+    # TODO: using logger instead of print
+    print('Deleting Layer \'{}\' from database'.format(layer))
     conn = ogr.Open(connection_string)
     try:
         conn.DeleteLayer(layer)
