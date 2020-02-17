@@ -2,6 +2,8 @@
 
 ### Detect encoding for the uploaded CSV
 
+- The problem: saving csv in UTF-8 from excel not fully encoded in UTF-8: [Excel to CSV with UTF8 encoding [closed]](https://stackoverflow.com/questions/4221176/excel-to-csv-with-utf8-encoding)
+
 - Use [jschardet](https://github.com/aadsm/jschardet) to detect the string encoding in JS 
 
 - Encoding detection and conversion for CSV in python [Article](https://apptension.com/blog/2018/05/07/import-csv-file-in-python/)
