@@ -97,16 +97,15 @@ def mkdirs(path):
 
 
 def get_field_names(path):
-    field_names = []
+    field_names = None
     try:
         with io.open(path, newline='') as f:
             dialect = csv.Sniffer().sniff(f.readline())
             f.seek(0)
             reader = csv.reader(f, dialect)
-            i = reader.next()
-            field_names.append(i)
+            field_names = reader.next()
     except Exception as e:
-        print('Error while reading csv: {}'.format(e))
+        print('Error while reading csv: {} at {}'.format(e, path))
     return field_names
 
 
