@@ -129,7 +129,6 @@ def clean_csv_header(old_fp, new_fp):
     :param new_fp: New file path which will contain valid SQLheaders csv
     :return:
     """
-    # https://stackoverflow.com/a/125759/5256990
     with io.open(old_fp, newline='') as f:
         # get the current field names and convert them to valid SQL col. names
         dialect = csv.Sniffer().sniff(f.readline())
@@ -155,6 +154,7 @@ def clean_csv_header(old_fp, new_fp):
             # 1. write the first line
             fw.write(line_string)
             # 2. copy using shutil for better performance
+            # TODO: increasing length in copyfileobj may lead to a better performance
             shutil.copyfileobj(f, fw)
 
 
