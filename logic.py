@@ -1,16 +1,18 @@
 import csv
 import io
 import os
+import re
 import subprocess
-from osgeo import ogr
+import shutil
 
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import connections
 from django.http import JsonResponse
 from geonode.geoserver.helpers import gs_catalog
 from geonode.geoserver.helpers import ogc_server_settings
 from geonode.layers.models import Layer
-from django.core.exceptions import ObjectDoesNotExist
+from osgeo import ogr
 
 from .constants import GeometryTypeChoices
 from .models import CSVUpload
@@ -96,17 +98,76 @@ def mkdirs(path):
         print('Path already exist, keep going to next steps...')
 
 
+def convert_to_sql_column_name(name):
+    name = name.strip()
+    search_regex = r'[^a-zA-Z0-9]'
+    replace_regex = '_'
+    return re.sub(search_regex, replace_regex, name).lower()[:50]
+
+
+def valid_attribute_name(name):
+    """
+    :param name:
+    :return: None true if valid attribute name
+    """
+    pattern = r'^.*[^a-zA-Z0-9_].*$'
+    return not re.match(pattern, name)
+
+
+def valid_headers_as_sql_attributes(fp):
+    field_names = get_field_names(path=fp)
+    for name in field_names:
+        if not valid_attribute_name(name):
+            return False
+    return True
+
+
+def clean_csv_header(old_fp, new_fp):
+    """
+    Convert CSV Columns headers into valid SQL columns headers
+    :param old_fp: Old file path to clean headers from
+    :param new_fp: New file path which will contain valid SQLheaders csv
+    :return:
+    """
+    with io.open(old_fp, newline='') as f:
+        # get the current field names and convert them to valid SQL col. names
+        dialect = csv.Sniffer().sniff(f.readline())
+        f.seek(0)
+        reader = csv.reader(f, dialect)
+        field_names = reader.next()
+        valid_field_names = [convert_to_sql_column_name(name) for name in field_names]
+
+        # convert to csv line string
+        line_string = ''
+        for name in valid_field_names:
+            line_string += dialect.delimiter + name
+        line_string = line_string[1:] + '\n'
+        line_string = unicode(line_string)
+
+        # delete first row
+        f.seek(0)
+        current_line = f.readline()
+        current_line = ""
+
+        # write to a new file
+        with io.open(new_fp, 'w') as fw:
+            # 1. write the first line
+            fw.write(line_string)
+            # 2. copy using shutil for better performance
+            # TODO: increasing length in copyfileobj may lead to a better performance
+            shutil.copyfileobj(f, fw)
+
+
 def get_field_names(path):
-    field_names = []
+    field_names = None
     try:
         with io.open(path, newline='') as f:
             dialect = csv.Sniffer().sniff(f.readline())
             f.seek(0)
             reader = csv.reader(f, dialect)
-            i = reader.next()
-            field_names.append(i)
+            field_names = reader.next()
     except Exception as e:
-        print('Error while reading csv: {}'.format(e))
+        print('Error while reading csv: {} at {}'.format(e, path))
     return field_names
 
 

@@ -23,7 +23,9 @@ from .logic import (
     delete_layer,
     create_from_xy,
     create_from_wkt_csv,
-    cascade_delete_layer
+    cascade_delete_layer,
+    clean_csv_header,
+    valid_headers_as_sql_attributes
 )
 from .models import CSVUpload
 from .utils import create_connection_string
@@ -43,21 +45,33 @@ def upload(request):
             return delete_csv(request)
         form = CSVUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            csv_name = request.FILES['csv_file'].name
+            file_obj = request.FILES['csv_file']
+            csv_name = file_obj.name
             today = datetime.now()
             date_as_path = today.strftime("%Y/%m/%d")
             csv_path = os.path.join(
                 'csv_manager', request.user.username, date_as_path, str(uuid.uuid4()))
             full_path = os.path.join(settings.MEDIA_ROOT, csv_path)
+            file_name_full_path = os.path.join(full_path, csv_name)
             mkdirs(full_path)
-            handle_uploaded_file(
-                request.FILES['csv_file'], os.path.join(full_path, csv_name))
-            features_count = get_rows_count(os.path.join(full_path, csv_name))
+            # land the file peacefully in its path
+            handle_uploaded_file(file_obj, file_name_full_path)
+
+            # check if valid headers
+            valid_headers = valid_headers_as_sql_attributes(file_name_full_path)
+            # clean them if needed
+            if not valid_headers:
+                old_fp = file_name_full_path + '.tmp'
+                os.rename(file_name_full_path, old_fp)
+                clean_csv_header(old_fp, new_fp=file_name_full_path)
+                os.remove(old_fp)
+
+            features_count = get_rows_count(file_name_full_path)
             CSVUpload.objects.create(csv_file=os.path.join(csv_path, csv_name), user=request.user,
                                      csv_file_name=csv_name,
                                      features_count=features_count)
             json_response = {"status": True, "message": "CSV uploaded successfully",
-                             "field_names": get_field_names(os.path.join(full_path, csv_name))}
+                             "field_names": get_field_names(file_name_full_path)}
             return JsonResponse(json_response, status=200)
         json_response = {
             "status": True, "message": "Error While uploading CSV".format(error_message)}

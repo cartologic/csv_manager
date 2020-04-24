@@ -25,7 +25,7 @@ const useStyles = makeStyles(theme => ({
 }));
 const get_item_fields = (item) => {
   return (
-    item.fields_names[0].map((field_name, i) => (<MenuItem key={i} value={field_name}>{field_name}</MenuItem>))
+    item.fields_names.map((field_name, i) => (<MenuItem key={i} value={field_name}>{field_name}</MenuItem>))
   )
 }
 const XYSelect = props => {
