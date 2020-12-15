@@ -3,6 +3,7 @@ import re
 
 from django.db import models
 from geonode.people.models import Profile
+
 from .constants import GeometryTypeChoices
 
 CSV_FILE_PERMISSIONS = (
@@ -65,6 +66,8 @@ class CSVUpload(models.Model):
     the_geom_field_name = models.CharField(max_length=55, blank=False, null=True,)
     srs = models.CharField(max_length=30, blank=False, default='WGS84')
     features_count = models.IntegerField(blank=False, default=0)
+    # text field as JSON to store dynamic field names for a CSV
+    fields_names = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.csv_name

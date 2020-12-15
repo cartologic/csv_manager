@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import migrations, models
 import csv_manager.models
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):

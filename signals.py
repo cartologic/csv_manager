@@ -1,8 +1,10 @@
-from .models import CSVUpload
-from django.db.models.signals import post_delete
-from django.dispatch import receiver
 import os
 import shutil
+
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
+
+from .models import CSVUpload
 
 
 @receiver(post_delete, sender=CSVUpload)
