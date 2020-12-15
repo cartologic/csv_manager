@@ -40,9 +40,6 @@ export default function ButtonAppBar(props) {
           <Link underline={'none'} color="inherit" href={urls.layerUpload}>
             <Button color="inherit">Upload Layer</Button>
           </Link>
-          <Link underline={'none'} color="inherit" href={urls.dataManager}>
-            <Button color="inherit">Data Manager</Button>
-          </Link>
           <Link underline={'none'} color="inherit" href={urls.baseURL}>
             <Button color="inherit">Home</Button>
           </Link>
