@@ -15,7 +15,7 @@ const plugins = [
     new webpack.HashedModuleIdsPlugin(),
     new webpack.SourceMapDevToolPlugin( {
         filename: 'sourcemaps/[file].map',
-        publicPath: '/static/data_manager/dist/',
+        publicPath: '/static/csv_manager/dist/',
         fileContext: 'public'
     } ),
     new BundleAnalyzerPlugin()
@@ -23,8 +23,8 @@ const plugins = [
 ]
 const config = {
     entry: {
-        GeopackageManager: path.join( APP_DIR, 'containers',
-            'GeopackageManager.jsx' ),
+        csvManager: path.join( APP_DIR,
+            'index.js' ),
     },
     optimization: {
         splitChunks: {
