@@ -2,8 +2,8 @@ import csv
 import io
 import os
 import re
-import subprocess
 import shutil
+import subprocess
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -17,6 +17,9 @@ from osgeo import ogr
 from .constants import GeometryTypeChoices
 from .models import CSVUpload
 from .publishers import GeoserverPublisher, GeonodePublisher
+
+LONGITUDE = 'longitude'
+LATITUDE = 'latitude'
 
 
 def execute(cmd):
@@ -122,6 +125,13 @@ def valid_headers_as_sql_attributes(fp):
     return True
 
 
+def header_has_lon_lat(fp):
+    field_names = get_field_names(path=fp)
+    lon_exist = LONGITUDE in field_names
+    lat_exist = LATITUDE in field_names
+    return lon_exist & lat_exist
+
+
 def clean_csv_header(old_fp, new_fp):
     """
     Convert CSV Columns headers into valid SQL columns headers
@@ -135,7 +145,8 @@ def clean_csv_header(old_fp, new_fp):
         f.seek(0)
         reader = csv.reader(f, dialect)
         field_names = reader.next()
-        valid_field_names = [convert_to_sql_column_name(name) for name in field_names]
+        valid_field_names = [convert_to_sql_column_name(
+            name) for name in field_names]
 
         # convert to csv line string
         line_string = ''
@@ -190,7 +201,8 @@ def create_xy_vrt(csv_upload_instance):
         csv_upload_instance.lat_field_name
     )
     csv_dir_path = os.path.dirname(csv_upload_instance.csv_file.path)
-    path = os.path.join(settings.MEDIA_ROOT, csv_dir_path, '{}.vrt'.format(csv_layer_name))
+    path = os.path.join(settings.MEDIA_ROOT, csv_dir_path,
+                        '{}.vrt'.format(csv_layer_name))
     # remove file if exists and create another
     if os.path.exists(path):
         os.remove(path)
@@ -218,7 +230,8 @@ def create_wkt_vrt(csv_upload_instance):
         csv_upload_instance.srs,
         csv_upload_instance.wkt_field_name,
     )
-    path = os.path.join(settings.MEDIA_ROOT, csv_dir_path, '{}.vrt'.format(csv_layer_name))
+    path = os.path.join(settings.MEDIA_ROOT, csv_dir_path,
+                        '{}.vrt'.format(csv_layer_name))
     # remove file if exists and create another
     if os.path.exists(path):
         os.remove(path)
@@ -228,7 +241,8 @@ def create_wkt_vrt(csv_upload_instance):
 
 
 def create_from_xy(csv_upload_instance, table_name):
-    # vrt_paht = create_xy_vrt(csv_upload_instance)
+    # create vrt file
+    create_xy_vrt(csv_upload_instance)
     X_POSSIBLE_NAMES = str(csv_upload_instance.lon_field_name)
     Y_POSSIBLE_NAMES = str(csv_upload_instance.lat_field_name)
     srs = str(csv_upload_instance.srs)
@@ -245,7 +259,8 @@ def create_from_wkt_csv(csv_upload_instance, table_name):
     geom_possible_names = str(csv_upload_instance.wkt_field_name)
     srs = str(csv_upload_instance.srs)
     csv_path = str(csv_upload_instance.csv_file.path)
-    out, err = wkt_csv_create_postgres_table(csv_path, table_name, srs, geom_possible_names, geom_type)
+    out, err = wkt_csv_create_postgres_table(
+        csv_path, table_name, srs, geom_possible_names, geom_type)
     return out, err
 
 

@@ -1,5 +1,3 @@
-import re
-
 from django import forms
 
 from .models import CSVUpload, valid_table__name
