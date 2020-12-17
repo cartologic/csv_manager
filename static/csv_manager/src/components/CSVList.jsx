@@ -34,6 +34,9 @@ const useStyles = makeStyles(theme => ({
     listItemAvatar: {
         marginTop: '5px',
     },
+    downloadLink: {
+        textDecoration: "none",
+    }
 }));
 const CSVListItem = (props) => {
     let { csvItem, handlePublishDialogOpen } = props
@@ -50,7 +53,7 @@ const CSVListItem = (props) => {
                 </Grid>
                 <Grid item md={4}>
                     <ListItemText
-                        primary={csvItem.csv_file_name}
+                        primary={<a className={classes.downloadLink} href={csvItem.source_file}>{csvItem.csv_file_name}</a>}
                         secondary={`Features Count: ${csvItem.features_count}`}
                     />
                 </Grid>

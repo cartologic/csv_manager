@@ -16,6 +16,7 @@ class CSVUploadResource(ModelResource):
     fields_names = ListField()
     # user = fields.ForeignKey(ProfileResource, 'user', full=True, verbose_name='owner')
     user = fields.DictField()
+    source_file = fields.CharField()
 
     class Meta:
         queryset = CSVUpload.objects.all()
@@ -46,3 +47,6 @@ class CSVUploadResource(ModelResource):
             'username': user.username,
             'id': user.id,
         }
+
+    def dehydrate_source_file(self, bundle):
+        return bundle.obj.csv_file.url
