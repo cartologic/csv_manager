@@ -170,7 +170,7 @@ def clean_csv_header(old_fp, new_fp):
 
 
 def get_field_names(path):
-    field_names = None
+    field_names = []
     try:
         with io.open(path, newline='') as f:
             dialect = csv.Sniffer().sniff(f.readline())
