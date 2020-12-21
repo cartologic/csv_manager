@@ -31,12 +31,13 @@ from .logic import (
 )
 from .models import CSVUpload
 from .utils import create_connection_string
-
+from . import __version__ as csv_manager_version
 
 @login_required
 def index(request):
     return render(request, template_name="%s/index.html" % APP_NAME,
-                  context={'message': 'Hello from %s' % APP_NAME, 'app_name': APP_NAME})
+                  context={'message': 'Hello from %s' % APP_NAME, 'app_name': APP_NAME,
+                  "app_version": csv_manager_version })
 
 
 @login_required
