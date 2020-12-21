@@ -8,15 +8,13 @@ import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import ListItemText from '@material-ui/core/ListItemText';
 import Avatar from '@material-ui/core/Avatar';
 import IconButton from '@material-ui/core/IconButton';
-import FormGroup from '@material-ui/core/FormGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
 import Grid from '@material-ui/core/Grid';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Typography from '@material-ui/core/Typography';
 import Assignment from '@material-ui/icons/Assignment';
 import Publish from '@material-ui/icons/Publish';
 import moment from 'moment'
+import Pagination from './Pagination'
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -80,6 +78,7 @@ export default (props) => {
         csvItems,
         handlePublishDialogOpen,
         uploadLoading,
+        paginationProps
     } = props
     return (
         <div className={classes.root}>
@@ -99,6 +98,9 @@ export default (props) => {
                             }
                         </List>
                     </div>
+                </Grid>
+                <Grid item md={12}>
+                    <Pagination {...paginationProps}/>
                 </Grid>
             </Grid>
         </div>

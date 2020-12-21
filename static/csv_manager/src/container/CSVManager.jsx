@@ -17,6 +17,11 @@ export default class CSVManager extends Component {
             loading: false,
             listLoading: false,
             uploadLoading: false,
+            nextUrl: false,
+            prevUrl: false,
+            limit: 20,
+            offset: 0,
+            total: 0,
         }
         // globalURLS are predefined in index.html otherwise use the following defaults
         this.urls = globalURLS
@@ -29,6 +34,7 @@ export default class CSVManager extends Component {
         this.handlePublishDialogPublish = this.handlePublishDialogPublish.bind(this)
         this.handlePublishDialogDelete = this.handlePublishDialogDelete.bind(this)
         this.handleSelectChange = this.handleSelectChange.bind(this)
+        this.paginationProps = this.paginationProps.bind(this)
     }
     handlePublishDialogDelete() {
         this.setState({
@@ -233,15 +239,28 @@ export default class CSVManager extends Component {
         }
         this.setState({ publishDialogData: data })
     }
-    fetchListOfCsvFiles() {
+    fetchListOfCsvFiles(url) {
+        if(!url){
+            url = new URL(this.urls.csvFilesApi, this.urls.siteURL)
+            url.searchParams.set('limit', this.state.limit)
+            url.searchParams.set('offset', this.state.offset)
+        }
         this.setState({
             listLoading: true,
         })
-        fetch(this.urls.csvFilesApi, {
+        fetch(url, {
             credentials: 'same-origin',
         })
             .then(response => response.json())
-            .then(data => this.setState({ listLoading: false, csvItems: data.objects }))
+            .then(data => this.setState({ 
+                listLoading: false, 
+                csvItems: data.objects, 
+                nextUrl: data.meta.next, 
+                prevUrl: data.meta.previous ,
+                limit: data.meta.limit,
+                offset: data.meta.offset,
+                total: data.meta.total_count,
+            }))
     }
     onDrop(accepted, rejected) {
         const removeSpecialCharacters = (str) => {
@@ -268,7 +287,9 @@ export default class CSVManager extends Component {
                     .then(response => response.json())
                     .then(response => {
                         if (response.status) {
-                            this.setState({ uploadLoading: false }, () => { this.fetchListOfCsvFiles() })
+                            this.setState({ uploadLoading: false }, () => { 
+                                this.fetchListOfCsvFiles() 
+                            })
                         }
                     })
             })
@@ -277,6 +298,21 @@ export default class CSVManager extends Component {
     componentDidMount() {
         this.fetchListOfCsvFiles()
     }
+    paginationProps = ()=>({
+        onNext: ()=>{
+            if(this.state.nextUrl)
+                this.fetchListOfCsvFiles(new URL(this.state.nextUrl, this.urls.siteURL))
+        },
+        onPrev: ()=>{
+            if(this.state.prevUrl)
+                this.fetchListOfCsvFiles(new URL(this.state.prevUrl, this.urls.siteURL))
+        },
+        nextUrl: this.state.nextUrl,
+        prevUrl: this.state.prevUrl,
+        limit: this.state.limit,
+        offset: this.state.offset,
+        total: this.state.total,
+    })
     render() {
         const props = {
             onDrop: this.onDrop,
@@ -294,6 +330,7 @@ export default class CSVManager extends Component {
             publishDialogData: this.state.publishDialogData,
 
             urls: this.urls,
+            paginationProps: this.paginationProps(),
         }
         return (
             <MainPage {...props} />
