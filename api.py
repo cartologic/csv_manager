@@ -23,7 +23,7 @@ class CSVUploadResource(ModelResource):
         resource_name = 'csv_upload'
         always_return_data = True
         allowed_methods = ['get', ]
-        limit = 20
+        limit = 100
         filtering = {
             "id": ALL,
             "uploaded_at": ALL,
