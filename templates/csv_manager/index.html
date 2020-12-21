@@ -11,6 +11,7 @@
 <div id='root'></div>
 <script>
     const globalURLS = {
+        siteURL: "{{SITEURL}}",
         csvFilesApi: "{% url 'api_dispatch_list'  api_name='csv_api' resource_name='csv_upload' %}",
         uploadCSV:"{% url  'csv_manager.upload'%}",
         publishCSV:"{% url  'csv_manager.publish'%}",
