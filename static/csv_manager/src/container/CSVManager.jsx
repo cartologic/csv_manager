@@ -170,7 +170,7 @@ export default class CSVManager extends Component {
                                 this.setState({
                                     publishDialogData: {
                                         ...this.state.publishDialogData,
-                                        error: error.message,
+                                        error: error.error,
                                         formErrors: undefined,
                                         layerURL: undefined,
                                     },
