@@ -145,7 +145,10 @@ def publish(request):
 
             # 4. GeoServer Publish
             gs_response = publish_in_geoserver(table_name)
-            if gs_response.status_code != 201:
+            if gs_response.content.find('already exist') > -1:
+                # TODO: refresh attrs and statistics
+                pass
+            elif gs_response.status_code != 201:
                 if gs_response.status_code == 500:
                     # status code 500:
                     # layer exist in geoserver datastore and does not exist in database

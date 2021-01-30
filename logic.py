@@ -284,19 +284,20 @@ def table_exist(name):
             connection = c
     table_names = connection.introspection.table_names()
     db_exist = name in table_names
-    gs_exist = bool(gs_catalog.get_layer(name))
+    # gs_exist = bool(gs_catalog.get_layer(name))
     try:
         Layer.objects.get(name=name)
         gn_exist = True
     except ObjectDoesNotExist:
         gn_exist = False
-    layer_exist = db_exist or gs_exist or gn_exist
+    layer_exist = db_exist or gn_exist
     if layer_exist:
         # TODO: using logger instead
         print('Table name \'{}\' is already exist in {}, {}, {}'.format(
             name,
             'database' if db_exist else '',
-            'geoserver' if gs_exist else '',
+            # 'geoserver' if gs_exist else '',
+            "",
             'geonode' if gn_exist else '',
         ))
     return layer_exist
