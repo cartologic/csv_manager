@@ -149,14 +149,14 @@ def publish(request):
                 # TODO: refresh attrs and statistics
                 pass
             elif gs_response.status_code != 201:
+                # delete layer from database
+                delete_layer(connection_string, str(table_name))
                 if gs_response.status_code == 500:
                     # status code 500:
                     # layer exist in geoserver datastore and does not exist in database
                     # hence the database check is done in step 2
                     # cascade delete is a method deletes layer from geoserver and database
                     cascade_delete_layer(str(table_name))
-                # delete layer from database as well
-                delete_layer(connection_string, str(table_name))
                 json_response = {
                     "status": False, "error": "Could not publish to GeoServer, Error Response Code:{}".format(
                         gs_response.status_code), 'warnings': warnings}
