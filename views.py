@@ -27,17 +27,18 @@ from .logic import (
     cascade_delete_layer,
     clean_csv_header,
     valid_headers_as_sql_attributes,
-    header_has_lon_lat,
+    get_publish_decision,
 )
 from .models import CSVUpload
 from .utils import create_connection_string
 from . import __version__ as csv_manager_version
 
+
 @login_required
 def index(request):
     return render(request, template_name="%s/index.html" % APP_NAME,
                   context={'message': 'Hello from %s' % APP_NAME, 'app_name': APP_NAME,
-                  "app_version": csv_manager_version })
+                           "app_version": csv_manager_version})
 
 
 @login_required
@@ -171,7 +172,7 @@ def publish(request):
                 cascade_delete_layer(str(table_name))
                 try:
                     Layer.objects.get(name=str(table_name)).delete()
-                finally:
+                except:
                     print(
                         'Layer {} could not be deleted or does not already exist'.format(table_name))
                 print('Error while publishing {} in geonode: {}'.format(
@@ -181,7 +182,107 @@ def publish(request):
                 return JsonResponse(json_response, status=400)
 
             json_response = {"status": True, "message": "CSV Updated successfully",
-                             'warnings': warnings, "layer_name": layer.alternate}
+                             'warnings': warnings, "layer_name": layer.alternate if layer else ""}
+            return JsonResponse(json_response, status=200)
+        else:
+            return JsonResponse({'error': dict(form.errors.items())}, status=400)
+
+
+@login_required
+def data_management_publish(request):
+    warnings = ''
+    if request.method == 'POST':
+        connection_string = create_connection_string()
+        csv_upload_instance = CSVUpload.objects.get(pk=request.POST['id'])
+        wkt = 'wkt' in request.POST
+        if wkt:
+            form = WKTPublishForm(request.POST, instance=csv_upload_instance)
+        else:
+            form = XYPublishForm(request.POST, instance=csv_upload_instance)
+        if form.is_valid():
+            # 1. save the model form
+            form.save(commit=True)
+
+            # 2. Check if table exist in the database
+            table_name = form.cleaned_data['table_name']
+
+            publish_decision = get_publish_decision(table_name)
+            if publish_decision is 'LINK_WITH_EXCHANGE_LAYER':
+                return JsonResponse({}, status=200)
+
+            if publish_decision is 'PUBLISH_DB_TABLE':
+                out, error = create_postgis_table_form_csv(
+                    request,
+                    connection_string,
+                    csv_upload_instance,
+                    table_name
+                )
+                if error:
+                    return JsonResponse({'error': error}, status=400)
+                return JsonResponse({}, status=200)
+
+            if publish_decision is 'REPUBLISH':
+                # 3. Create table in postgres using gdal ogr2ogr
+                if wkt:
+                    out, err = create_from_wkt_csv(
+                        csv_upload_instance, table_name)
+                else:
+                    out, err = create_from_xy(csv_upload_instance, table_name)
+
+                if len(err) > 0:
+                    print('errors: ', err)
+                    print('out: ', out)
+                    if re.search(r'(\berror\b)|(\bError\b)|(\bERROR\b)|(\bFAILURE\b)', err):
+                        # Roll back and delete the created table in database
+                        delete_layer(connection_string, str(table_name))
+                        json_response = {
+                            "status": False, "error": "Error While Publishing to database: {}".format(err)}
+                        if re.search(r'(\bUTF8\b)', err):
+                            json_response = {
+                                "status": False,
+                                "error": "Seems that some data are not stored in UTF-8 format!".format(err)}
+                        return JsonResponse(json_response, status=400)
+                    warnings = err
+
+            # 4. GeoServer Publish
+            gs_response = publish_in_geoserver(table_name)
+            if gs_response.content.find('already exist') > -1:
+                # TODO: refresh attrs and statistics
+                pass
+            elif gs_response.status_code != 201:
+                # delete layer from database
+                delete_layer(connection_string, str(table_name))
+                # if gs_response.status_code == 500:
+                #     # status code 500:
+                #     # layer exist in geoserver datastore and does not exist in database
+                #     # hence the database check is done in step 2
+                #     # cascade delete is a method deletes layer from geoserver and database
+                #     cascade_delete_layer(str(table_name))
+                json_response = {
+                    "status": False, "error": "Could not publish to GeoServer, Error Response Code:{}".format(
+                        gs_response.status_code), 'warnings': warnings}
+                return JsonResponse(json_response, status=400)
+
+            # 5. GeoNode Publish
+            try:
+                layer = publish_in_geonode(table_name, owner=request.user)
+            except Exception as e:
+                # Roll back and delete the created table in database, geoserver and geonode if exist
+                delete_layer(connection_string, str(table_name))
+                # cascade_delete_layer(str(table_name))
+                try:
+                    Layer.objects.get(name=str(table_name)).delete()
+                except:
+                    print(
+                        'Layer {} could not be deleted or does not already exist'.format(table_name))
+                print('Error while publishing {} in geonode: {}'.format(
+                    table_name, e))
+                json_response = {
+                    "status": False, "error": "Could not publish in GeoNode", 'warnings': warnings}
+                return JsonResponse(json_response, status=400)
+
+            json_response = {"status": True, "message": "CSV Updated successfully",
+                             'warnings': warnings, "layer_name": layer.alternate if layer else ""}
             return JsonResponse(json_response, status=200)
         else:
             return JsonResponse({'error': dict(form.errors.items())}, status=400)
