@@ -303,6 +303,32 @@ def table_exist(name):
     return layer_exist
 
 
+def get_publish_decision(name):
+    data_db_name = settings.OGC_SERVER['default']['DATASTORE']
+    connection = None
+    for c in connections.all():
+        if c.alias == data_db_name:
+            connection = c
+    table_names = connection.introspection.table_names()
+    db_exist = name in table_names
+
+    gn_exist = True
+    gn_layer = None
+    try:
+        gn_layer = Layer.objects.get(name=name)
+    except ObjectDoesNotExist:
+        gn_exist = False
+
+    if db_exist and gn_exist:
+        return 'LINK_WITH_EXCHANGE_LAYER'
+    elif db_exist and not gn_exist:
+        return 'PUBLISH_GEOSERVER_GEONODE'
+    elif not db_exist and gn_exist:
+         return 'PUBLISH_DB_TABLE'
+
+    return 'REPUBLISH'
+
+
 def publish_in_geoserver(table_name):
     gs_publisher = GeoserverPublisher()
     return gs_publisher.publish_postgis_layer(table_name, table_name)
